@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+</head>
+<body>
+<title>Who Said That Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;800;900&display=swap">
+<style>
+/* Layout: header bar (title, live status, mode buttons) → one of: setup panel | "show all" wall of hidden boarding passes | one-by-one reveal ticket. Data: Google Form response sheet via the Google Drive connector, or pasted Name | Fact lines. */
+:root{
+  --green:#D4DF38;--green-75:#DFE76A;--green-50:#E9EF9B;--green-20:#F6F9D7;
+  --grey:#454546;--grey-deep:#373738;--text:#414042;--soft:#6E6D70;--paper:#FFFFFF;
+  --stamp:#B4262A;
+  --font:"Franklin Gothic URW","Libre Franklin","Franklin Gothic Medium",Arial,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{margin:0;background:var(--grey);color:var(--paper);font-family:var(--font);padding:24px 16px 40px;
+  background:radial-gradient(ellipse 70% 40% at 50% 30%, rgba(212,223,56,.12), transparent 70%), var(--grey)}
+p,h1,h2{margin:0}
+.wrap{max-width:1320px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.eyebrow{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--green)}
+.label{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--soft)}
+.btn{appearance:none;border:0;border-radius:8px;font:inherit;font-weight:900;font-size:16px;padding:13px 18px;cursor:pointer;background:var(--green);color:var(--grey)}
+.ghost{appearance:none;background:transparent;border:2px solid rgba(255,255,255,.4);color:var(--paper);border-radius:8px;font:inherit;font-weight:800;font-size:15px;padding:11px 16px;cursor:pointer}
+.ghost:hover:not(:disabled){border-color:var(--green)}
+.ghost.on{background:var(--paper);color:var(--grey);border-color:var(--paper)}
+.ghost:disabled{opacity:.35;cursor:default}
+.btn:focus-visible,.ghost:focus-visible,.ticket:focus-visible{outline:3px solid var(--green);outline-offset:3px}
+
+/* Header */
+.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px 28px;border-bottom:4px solid var(--green);padding-bottom:16px}
+h1{font-size:clamp(40px,6vw,88px);font-weight:900;line-height:.92;letter-spacing:-.025em;margin-top:6px}
+h1 em{font-style:normal;color:var(--green)}
+.right{display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+.stats{display:flex;gap:24px;align-items:flex-end}
+.stat{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.stat .k{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#B9B9BB}
+.stat .v{font-size:clamp(30px,4vw,54px);font-weight:900;line-height:1;color:var(--green);font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:6px 10px;border-radius:4px;background:rgba(255,255,255,.12)}
+.pill i{width:9px;height:9px;border-radius:50%;background:#A3A3A5}
+.pill.live i{background:var(--green);animation:blink 1.6s steps(1) infinite}
+.pill.warn i{background:#FFB4A8}
+.modes{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+.note{font-size:14px;color:rgba(255,255,255,.75);min-height:1.2em}
+.note b{color:var(--green)}
+
+/* Setup */
+.setup{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px}
+.panel{background:var(--paper);color:var(--text);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:12px}
+.panel h2{font-size:22px;font-weight:900;color:var(--grey)}
+.panel p{font-size:15px;line-height:1.5}
+.panel input,.panel textarea{width:100%;font:inherit;font-size:16px;padding:12px;border:2px solid #D8D8D6;border-radius:8px;background:#FBFBF8;color:var(--grey);resize:vertical}
+.panel input:focus,.panel textarea:focus{outline:3px solid var(--green);outline-offset:1px;border-color:var(--grey)}
+.panel .btn{align-self:flex-start;background:var(--grey);color:var(--green)}
+.panel .ghost{color:var(--grey);border-color:#C9C9C7;align-self:flex-start}
+.row{display:flex;flex-wrap:wrap;gap:10px}
+.msg{font-size:14px;font-weight:600;min-height:1.2em}
+.msg.bad{color:#9B1C1C}
+.warnbox{background:#FFF1C2;color:#5A4500;border-radius:8px;padding:10px 12px;font-size:14px;line-height:1.45}
+
+/* Wall */
+.wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
+.mini{background:var(--paper);color:var(--text);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 14px 30px rgba(0,0,0,.3)}
+.mini.new{animation:flap .7s cubic-bezier(.2,.9,.25,1)}
+.mini header{background:var(--green);color:var(--grey);display:flex;justify-content:space-between;align-items:center;padding:9px 14px;font-weight:900;font-size:13px;letter-spacing:.08em}
+.mini blockquote{margin:0;padding:14px 14px 12px;font-size:18px;font-weight:800;line-height:1.25;color:var(--grey);flex:1}
+.mini footer{display:flex;justify-content:space-between;gap:10px;padding:9px 14px;border-top:2px dashed #E1E1DE;font-size:12px;font-weight:800;letter-spacing:.12em;color:#A3A3A5}
+.mini.done header{background:var(--grey);color:var(--green)}
+.mini.done footer span:first-child{color:var(--stamp)}
+.empty{grid-column:1/-1;padding:56px 16px;text-align:center;font-size:20px;line-height:1.5;color:rgba(255,255,255,.8);border:2px dashed rgba(255,255,255,.25);border-radius:14px}
+.empty b{color:var(--green)}
+.wall-cta{display:flex;justify-content:center}
+
+/* Reveal ticket */
+.stage{display:flex;flex-direction:column;align-items:center;gap:18px}
+.ticket{width:100%;max-width:1100px;display:grid;grid-template-columns:minmax(0,1fr) 230px;background:var(--paper);color:var(--text);border-radius:18px;overflow:hidden;box-shadow:0 26px 60px rgba(0,0,0,.45);cursor:pointer}
+.ticket.enter{animation:rise .55s cubic-bezier(.2,.9,.25,1)}
+.main{display:flex;flex-direction:column}
+.t-head{background:var(--green);color:var(--grey);padding:16px 28px;display:flex;justify-content:space-between;align-items:center;gap:16px;transition:background .3s,color .3s}
+.t-head b{font-size:22px;font-weight:900;letter-spacing:.02em}
+.route{display:flex;align-items:center;gap:10px;font-weight:900;font-size:20px;letter-spacing:.06em}
+.fact{padding:28px 28px 20px;flex:1;display:flex;flex-direction:column;gap:12px;justify-content:center;min-height:220px}
+.fact blockquote{margin:0;font-size:clamp(26px,3.4vw,46px);font-weight:800;line-height:1.15;color:var(--grey);letter-spacing:-.01em;text-wrap:balance}
+.fields{display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr;gap:12px;padding:14px 28px 22px;border-top:1px solid #E6E6E4}
+.fields .v{font-size:20px;font-weight:900;color:var(--grey);margin-top:3px;overflow-wrap:anywhere}
+.pfield{position:relative}
+.mystery{letter-spacing:.32em;color:#A3A3A5!important}
+.named{font-size:clamp(28px,3vw,40px)!important;line-height:1;letter-spacing:-.01em}
+.stamp{position:absolute;right:0;top:-6px;border:3px solid var(--stamp);color:var(--stamp);font-weight:900;letter-spacing:.14em;text-transform:uppercase;font-size:13px;padding:3px 9px;border-radius:5px;transform:rotate(-8deg);background:rgba(255,255,255,.9);animation:stamp .35s cubic-bezier(.3,1.6,.5,1)}
+.stub{background:var(--green-20);border-left:2px dashed #C9CD9A;padding:16px 20px;display:flex;flex-direction:column;gap:14px;position:relative}
+.stub::before,.stub::after{content:"";position:absolute;left:-13px;width:24px;height:24px;border-radius:50%;background:var(--grey)}
+.stub::before{top:-12px}.stub::after{bottom:-12px}
+.big{font-size:46px;font-weight:900;color:var(--grey);line-height:1;font-variant-numeric:tabular-nums}
+.big small{font-size:18px;color:var(--soft)}
+.guess{border:2px solid var(--grey);border-radius:8px;height:46px;margin-top:4px}
+.nextup{font-weight:800;color:var(--grey);margin-top:4px}
+.bars{margin-top:auto;height:42px;background:repeating-linear-gradient(90deg,var(--grey) 0 2px,transparent 2px 4px,var(--grey) 4px 7px,transparent 7px 9px,var(--grey) 9px 10px,transparent 10px 13px)}
+.ticket.revealed .t-head{background:var(--grey);color:var(--green)}
+.ctrl{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
+.hint{font-size:13px;color:rgba(255,255,255,.65)}
+
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
+@keyframes flap{0%{transform:rotateX(90deg);opacity:0}60%{transform:rotateX(-12deg);opacity:1}100%{transform:none}}
+@keyframes rise{from{transform:translateY(40px) scale(.96);opacity:0}to{transform:none;opacity:1}}
+@keyframes stamp{from{transform:rotate(-8deg) scale(2.2);opacity:0}to{transform:rotate(-8deg) scale(1);opacity:1}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+@media (max-width:760px){
+  .right{align-items:flex-start}.modes{justify-content:flex-start}.stat{align-items:flex-start}
+  .ticket{grid-template-columns:1fr}.stub{border-left:0;border-top:2px dashed #C9CD9A}.stub::before,.stub::after{display:none}
+  .fields{grid-template-columns:1fr 1fr}
+}
+@media (prefers-reduced-motion:reduce){.mini.new,.ticket.enter,.stamp,.pill.live i{animation:none}}
+</style>
+
+<canvas id="confetti" aria-hidden="true"></canvas>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <p class="eyebrow">Centennial College · PMO &amp; SMO Day · Flight PMO 1104</p>
+      <h1>Who Said <em>That?</em></h1>
+    </div>
+    <div class="right">
+      <div class="stats">
+        <div class="stat"><span class="k">Status</span><span class="pill" id="pill"><i></i><span id="pillText">Not connected</span></span></div>
+        <div class="stat"><span class="k">Facts on board</span><span class="v" id="count">0</span></div>
+      </div>
+      <div class="modes" role="group" aria-label="Board view">
+        <button class="ghost" id="mAll" type="button">Show all</button>
+        <button class="ghost" id="mReveal" type="button">Reveal one by one</button>
+        <button class="ghost" id="mSetup" type="button">Organizer setup</button>
+      </div>
+    </div>
+  </header>
+  <p class="note" id="note" role="status"></p>
+
+  <!-- Setup -->
+  <section class="setup" id="setup" aria-label="Organizer setup">
+    <div class="panel">
+      <p class="label">Option 1 · live</p>
+      <h2>Connect the Google Form's response sheet</h2>
+      <p>On your own website (GitHub Pages): paste the sheet's <b>Publish to web</b> CSV link. It ends in <b>output=csv</b>. The board checks it about every 15 seconds.</p>
+      <p>Opened inside Claude instead: you can paste the sheet's normal link. The board then reads it through your Google Drive connection, about every 30 seconds.</p>
+      <label class="label" for="sheetIn">Response sheet link</label>
+      <input id="sheetIn" type="url" placeholder="https://docs.google.com/spreadsheets/d/e/…/pub?output=csv" autocomplete="off">
+      <div class="row">
+        <button class="btn" id="connect" type="button">Connect sheet</button>
+        <button class="ghost" id="refresh" type="button">Check now</button>
+        <button class="ghost" id="disconnect" type="button">Disconnect</button>
+      </div>
+      <p class="msg" id="sheetMsg" role="status"></p>
+      <p class="warnbox">This setup screen shows the sheet link only, never names. Even so, set it up before the projector goes on.</p>
+    </div>
+    <div class="panel">
+      <p class="label">Option 2 · backup</p>
+      <h2>Paste the facts yourself</h2>
+      <p>Microsoft Forms: open the responses in Excel, press <b>Ctrl + A</b> then <b>Ctrl + C</b>, and paste here. The board picks out the first-name and fact columns by itself. Or type one fact per line as <b>Name | Fact</b>. Use this if the Google link isn't available on the day.</p>
+      <label class="label" for="pasteIn">Facts</label>
+      <textarea id="pasteIn" rows="6" placeholder="Alex | I've been on television.&#10;Sam | I once went on a date and left after 10 minutes."></textarea>
+      <div class="row">
+        <button class="btn" id="usePaste" type="button">Use these facts</button>
+        <button class="ghost" id="sample" type="button">Try sample facts</button>
+        <button class="ghost" id="clearPaste" type="button">Clear</button>
+      </div>
+      <p class="msg" id="pasteMsg" role="status"></p>
+    </div>
+  </section>
+
+  <!-- Show all -->
+  <section id="all" hidden aria-label="All mystery passengers">
+    <div class="wall" id="wall" aria-live="polite"></div>
+    <div class="wall-cta" style="margin-top:20px"><button class="btn" id="startReveal" type="button">Start the reveal →</button></div>
+  </section>
+
+  <!-- Reveal one by one -->
+  <section class="stage" id="stage" hidden aria-label="Reveal one by one">
+    <article class="ticket" id="ticket" tabindex="0" aria-label="Boarding pass. Press Space to reveal the passenger.">
+      <div class="main">
+        <div class="t-head"><b id="tTitle">WHO SAID THAT?</b><span class="route">PMO <span aria-hidden="true">✈</span> SMO</span></div>
+        <div class="fact"><p class="label" id="tLead">Declared by a mystery passenger</p><blockquote id="tFact"></blockquote></div>
+        <div class="fields">
+          <div class="pfield"><p class="label">Passenger</p><p class="v mystery" id="tName">? ? ? ? ?</p><span class="stamp" id="tStamp" hidden>Identified</span></div>
+          <div><p class="label">Flight</p><p class="v">PMO 1104</p></div>
+          <div><p class="label">Date</p><p class="v">04 NOV</p></div>
+          <div><p class="label">Seat</p><p class="v" id="tSeat">??</p></div>
+        </div>
+      </div>
+      <div class="stub">
+        <div><p class="label">Fact</p><p class="big" id="tNum"></p></div>
+        <div id="stubGuess"><p class="label">Your guess</p><div class="guess"></div></div>
+        <div id="stubNext" hidden><p class="label">Next up</p><p class="nextup" id="tNext"></p></div>
+        <div class="bars"></div>
+      </div>
+    </article>
+    <div class="ctrl">
+      <button class="ghost" id="prev" type="button">← Previous</button>
+      <button class="btn" id="reveal" type="button">Reveal passenger</button>
+      <button class="ghost" id="next" type="button">Next fact →</button>
+    </div>
+    <p class="hint">Click the ticket or press Space to reveal. Arrow keys move between facts. New facts that arrive during the game join the end of the line.</p>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  // ----- Settings you can edit -----
+  var SHEET_LINK = "";               // optional: bake in the sheet link (Publish-to-web CSV link, or the normal sheet link inside Claude)
+  var SERVER = "Google Drive", TOOL = "read_file_content";
+  var POLL_MS = 30000, CSV_POLL_MS = 15000;
+  var K = { sheet:"wst-sheet", paste:"wst-paste", order:"wst-order", idx:"wst-idx", done:"wst-done", mode:"wst-mode" };
+
+  // ----- Helpers -----
+  var $ = function(id){ return document.getElementById(id); };
+  var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function get(k, d){ try{ var v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } }
+  function put(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+  function hash(s){ var h = 5381; for(var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return "f" + (h >>> 0).toString(36); }
+  function pad(n){ return (n < 10 ? "0" : "") + n; }
+  function seat(i){ return (Math.floor(i/4) + 1) + "ABCD"[i % 4]; }
+  function q(s){ return "“" + s + "”"; }
+
+  // ----- State -----
+  var sheetFacts = [], pasteFacts = get(K.paste, []), source = "none";
+  var order = get(K.order, []), idx = get(K.idx, 0), done = get(K.done, {});
+  var seen = {}, firstLoad = true, mode = "setup", revealed = false;
+  var mcp = null, unwatch = null, sheetLink = get(K.sheet, "") || SHEET_LINK, sheetId = "", csvTimer = 0;
+
+  function facts(){ return source === "sheet" ? sheetFacts : source === "paste" ? pasteFacts : []; }
+  function byId(){ var m = {}; facts().forEach(function(f){ m[f.id] = f; }); return m; }
+
+  // Reveal order: keep what's already set, shuffle in newcomers at the end
+  function syncOrder(){
+    var m = byId(), kept = order.filter(function(id){ return m[id]; });
+    var fresh = facts().map(function(f){ return f.id; }).filter(function(id){ return kept.indexOf(id) < 0; });
+    for(var i = fresh.length - 1; i > 0; i--){ var j = Math.floor(Math.random()*(i+1)), t = fresh[i]; fresh[i] = fresh[j]; fresh[j] = t; }
+    order = kept.concat(fresh);
+    if(idx > order.length - 1) idx = Math.max(0, order.length - 1);
+    put(K.order, order); put(K.idx, idx);
+  }
+
+  // ----- Parsing -----
+  function splitRow(line){
+    var s = line.trim().replace(/^\|/, "").replace(/\|$/, "");
+    var cells = [], cur = "";
+    for(var i = 0; i < s.length; i++){
+      var c = s[i];
+      if(c === "\\" && i + 1 < s.length){ cur += s[i+1]; i++; continue; }
+      if(c === "|"){ cells.push(cur.trim()); cur = ""; continue; }
+      cur += c;
+    }
+    cells.push(cur.trim());
+    return cells;
+  }
+  function textOf(payload){
+    if(typeof payload === "string"){ try{ var j = JSON.parse(payload); if(j && j.fileContent) return j.fileContent; }catch(e){} return payload; }
+    if(payload && typeof payload.fileContent === "string") return payload.fileContent;
+    return "";
+  }
+  function parseSheet(payload){
+    var lines = textOf(payload).split(/\r?\n/).filter(function(l){ return /^\s*\|/.test(l); });
+    var rows = lines.map(splitRow).filter(function(r){ return !r.every(function(c){ return /^:?-{2,}:?$/.test(c); }); });
+    var h = -1, nc = -1, fc = -1, tc = -1;
+    for(var i = 0; i < rows.length && h < 0; i++){
+      var r = rows[i], n = -1, f = -1, t = -1;
+      r.forEach(function(c, k){ if(/fact/i.test(c) && f < 0) f = k; else if(/name/i.test(c) && n < 0) n = k; else if(/timestamp/i.test(c)) t = k; });
+      if(n > -1 && f > -1){ h = i; nc = n; fc = f; tc = t; }
+    }
+    if(h < 0) return null;                            // no header found
+    var out = [];
+    rows.slice(h + 1).forEach(function(r){
+      var name = (r[nc] || "").trim(), fact = (r[fc] || "").trim();
+      if(!fact) return;
+      out.push({ id: hash((tc > -1 ? r[tc] : "") + "|" + name + "|" + fact), n: (name || "Someone").slice(0, 40), f: fact.slice(0, 280) });
+    });
+    return out;
+  }
+  function parseCSV(text){
+    var rows = [], row = [], cur = "", inQ = false;
+    for(var i = 0; i < text.length; i++){
+      var c = text[i];
+      if(inQ){ if(c === '"'){ if(text[i+1] === '"'){ cur += '"'; i++; } else inQ = false; } else cur += c; continue; }
+      if(c === '"') inQ = true;
+      else if(c === ","){ row.push(cur); cur = ""; }
+      else if(c === "\n" || c === "\r"){ if(c === "\r" && text[i+1] === "\n") i++; row.push(cur); rows.push(row); row = []; cur = ""; }
+      else cur += c;
+    }
+    if(cur || row.length){ row.push(cur); rows.push(row); }
+    if(!rows.length) return null;
+    var h = rows[0], nc = -1, fc = -1, tc = -1;
+    h.forEach(function(c, k){ if(/fact/i.test(c) && fc < 0) fc = k; else if(/name/i.test(c) && nc < 0) nc = k; else if(/timestamp/i.test(c)) tc = k; });
+    if(nc < 0 || fc < 0) return null;
+    var out = [];
+    rows.slice(1).forEach(function(r){
+      var name = (r[nc] || "").trim(), fact = (r[fc] || "").trim();
+      if(!fact) return;
+      out.push({ id: hash((tc > -1 ? r[tc] : "") + "|" + name + "|" + fact), n: (name || "Someone").slice(0, 40), f: fact.slice(0, 280) });
+    });
+    return out;
+  }
+  // Excel/MS Forms copy = tab-separated; cells with line breaks come wrapped in quotes
+  function parseTSV(text){
+    var rows = [], row = [], cur = "", inQ = false, atStart = true;
+    for(var i = 0; i < text.length; i++){
+      var c = text[i];
+      if(inQ){ if(c === '"'){ if(text[i+1] === '"'){ cur += '"'; i++; } else inQ = false; } else cur += c; continue; }
+      if(c === '"' && atStart){ inQ = true; atStart = false; continue; }
+      atStart = false;
+      if(c === "\t"){ row.push(cur); cur = ""; atStart = true; }
+      else if(c === "\n" || c === "\r"){ if(c === "\r" && text[i+1] === "\n") i++; row.push(cur); rows.push(row); row = []; cur = ""; atStart = true; }
+      else cur += c;
+    }
+    if(cur || row.length){ row.push(cur); rows.push(row); }
+    return rows;
+  }
+  function parsePaste(text){
+    var items = [], skipped = 0;
+    // 1) Table with a header row (Ctrl+A, Ctrl+C from the MS Forms Excel file)
+    if(text.indexOf("\t") > -1){
+      var rows = parseTSV(text).filter(function(r){ return r.some(function(c){ return c.trim(); }); });
+      var h = rows.length ? rows[0] : [], nc = -1, fc = -1, k;
+      for(k = 0; k < h.length; k++){ if(/fact|secret/i.test(h[k])){ fc = k; break; } }
+      for(k = 0; k < h.length; k++){ if(k !== fc && /first\s*name/i.test(h[k])){ nc = k; break; } }
+      if(nc < 0) for(k = 0; k < h.length; k++){ if(k !== fc && /name/i.test(h[k])){ nc = k; break; } }
+      if(fc > -1 && nc > -1){
+        rows.slice(1).forEach(function(r){
+          var name = (r[nc] || "").trim(), fact = (r[fc] || "").replace(/\s+/g, " ").trim();
+          if(!fact){ skipped++; return; }
+          if(!name || /^anonymous$/i.test(name)){ skipped++; return; }
+          items.push({ id: hash("p|" + name + "|" + fact), n: name.slice(0, 40), f: fact.slice(0, 280) });
+        });
+        return { items: items, skipped: skipped };
+      }
+      // No header: treat as two columns, Name then Fact
+      rows.forEach(function(r){
+        var name = (r[0] || "").trim(), fact = r.slice(1).join(" ").replace(/\s+/g, " ").trim();
+        if(/^(first )?name$/i.test(name)) return;
+        if(!name || !fact){ skipped++; return; }
+        items.push({ id: hash("p|" + name + "|" + fact), n: name.slice(0, 40), f: fact.slice(0, 280) });
+      });
+      return { items: items, skipped: skipped };
+    }
+    // 2) Typed lines: Name | Fact
+    text.split(/\r?\n/).forEach(function(line){
+      if(!line.trim()) return;
+      var i = line.indexOf("|");
+      if(i < 0){ skipped++; return; }
+      var name = line.slice(0, i).trim(), fact = line.slice(i + 1).trim();
+      if(/^(first )?name$/i.test(name)) return;
+      if(!name || !fact){ skipped++; return; }
+      items.push({ id: hash("p|" + name + "|" + fact), n: name.slice(0, 40), f: fact.slice(0, 280) });
+    });
+    return { items: items, skipped: skipped };
+  }
+
+  // ----- Status -----
+  function status(kind, text){ $("pill").className = "pill " + (kind || ""); $("pillText").textContent = text; }
+  var noteTimer = 0;
+  function note(html){ if(!html) return; $("note").innerHTML = html; clearTimeout(noteTimer); noteTimer = setTimeout(function(){ $("note").innerHTML = ""; }, 12000); }
+  function stamp(){ return new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit"}); }
+
+  // ----- Confetti -----
+  var cv = $("confetti"), cx = cv.getContext("2d"), parts = [], raf = 0;
+  var COLORS = ["#D4DF38","#FFFFFF","#E9EF9B","#DFE76A","#A3A3A5"];
+  function size(){ var d = window.devicePixelRatio || 1; cv.width = innerWidth*d; cv.height = innerHeight*d; cx.setTransform(d,0,0,d,0,0); }
+  addEventListener("resize", size); size();
+  function burst(n){
+    if(reduce) n = Math.round(n/5);
+    var x = innerWidth/2, y = innerHeight*0.4;
+    for(var i = 0; i < n; i++){ var a = Math.random()*Math.PI*2, s = 4 + Math.random()*10;
+      parts.push({x:x,y:y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-7,w:6+Math.random()*6,h:9+Math.random()*10,r:Math.random()*6,vr:(Math.random()-.5)*.35,c:COLORS[i%COLORS.length],t:0}); }
+    if(!raf) raf = requestAnimationFrame(tick);
+  }
+  function tick(){
+    cx.clearRect(0,0,innerWidth,innerHeight);
+    parts = parts.filter(function(p){ return p.y < innerHeight + 40 && p.t < 280; });
+    parts.forEach(function(p){ p.t++; p.vy += .24; p.vx *= .985; p.vy *= .985; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      cx.save(); cx.translate(p.x,p.y); cx.rotate(p.r); cx.fillStyle = p.c; cx.fillRect(-p.w/2,-p.h/2,p.w,Math.abs(Math.cos(p.t*.12))*p.h+1); cx.restore(); });
+    raf = parts.length ? requestAnimationFrame(tick) : 0;
+  }
+
+  // ----- Render -----
+  function setMode(m){
+    mode = m; put(K.mode, m);
+    $("setup").hidden = m !== "setup"; $("all").hidden = m !== "all"; $("stage").hidden = m !== "reveal";
+    $("mAll").classList.toggle("on", m === "all"); $("mReveal").classList.toggle("on", m === "reveal"); $("mSetup").classList.toggle("on", m === "setup");
+    $("mAll").setAttribute("aria-pressed", m === "all"); $("mReveal").setAttribute("aria-pressed", m === "reveal"); $("mSetup").setAttribute("aria-pressed", m === "setup");
+    render();
+  }
+  function render(){
+    syncOrder();
+    var list = facts(), m = byId();
+    $("count").textContent = list.length;
+    $("mReveal").disabled = !list.length; $("startReveal").disabled = !list.length;
+    if(mode === "all") renderWall(list);
+    if(mode === "reveal") renderTicket(m, true);
+  }
+  function renderWall(list){
+    var wall = $("wall"); wall.textContent = "";
+    if(!list.length){
+      var e = document.createElement("p"); e.className = "empty";
+      e.innerHTML = source === "none" ? "No facts yet. Open <b>Organizer setup</b> to connect the form's sheet." : "Waiting for the first mystery passenger…<br>Facts appear here as guests send them from their welcome gift.";
+      wall.appendChild(e); return;
+    }
+    list.forEach(function(f, i){
+      var card = document.createElement("article"); card.className = "mini" + (done[f.id] ? " done" : "") + (seen[f.id] === "new" ? " new" : "");
+      var h = document.createElement("header"); var a = document.createElement("span"); a.textContent = "BOARDING PASS"; var b = document.createElement("span"); b.textContent = "PMO 1104"; h.append(a, b);
+      var bq = document.createElement("blockquote"); bq.textContent = q(f.f);
+      var ft = document.createElement("footer"); var c = document.createElement("span"); c.textContent = done[f.id] ? "IDENTIFIED" : "PASSENGER  ? ? ?"; var d = document.createElement("span"); d.textContent = "#" + pad(i + 1); ft.append(c, d);
+      card.append(h, bq, ft); wall.appendChild(card);
+    });
+    Object.keys(seen).forEach(function(k){ seen[k] = true; });
+  }
+  function renderTicket(m, reset){
+    var id = order[idx], f = m[id];
+    if(!f){ $("tFact").textContent = ""; return; }
+    if(reset){ revealed = false; var t = $("ticket"); t.classList.remove("enter"); void t.offsetWidth; if(!reduce) t.classList.add("enter"); }
+    var on = revealed;
+    $("ticket").classList.toggle("revealed", on);
+    $("tTitle").textContent = on ? "PASSENGER IDENTIFIED" : "WHO SAID THAT?";
+    $("tLead").textContent = on ? "Declared by" : "Declared by a mystery passenger";
+    $("tFact").textContent = q(f.f);
+    $("tName").textContent = on ? f.n : "? ? ? ? ?";
+    $("tName").className = "v " + (on ? "named" : "mystery");
+    $("tStamp").hidden = !on;
+    $("tSeat").textContent = on ? seat(idx) : "??";
+    $("tNum").innerHTML = pad(idx + 1) + '<small> / ' + pad(order.length) + '</small>';
+    $("stubGuess").hidden = on; $("stubNext").hidden = !on;
+    $("tNext").textContent = idx < order.length - 1 ? "Fact " + pad(idx + 2) + " →" : "That's everyone!";
+    $("reveal").textContent = on ? "Hide the name" : "Reveal passenger";
+    $("prev").disabled = idx === 0; $("next").disabled = idx >= order.length - 1;
+  }
+  function toggleReveal(){
+    var id = order[idx]; if(!id) return;
+    revealed = !revealed;
+    if(revealed){ done[id] = true; put(K.done, done); burst(170); }
+    renderTicket(byId(), false);
+  }
+  function go(d){
+    var n = idx + d; if(n < 0 || n > order.length - 1) return;
+    idx = n; put(K.idx, idx); renderTicket(byId(), true);
+  }
+
+  // ----- Live sheet -----
+  function idFromLink(s){ if(/\/d\/e\//.test(s)) return ""; var m = /\/d\/([A-Za-z0-9_-]{20,})/.exec(s) || /^([A-Za-z0-9_-]{20,})$/.exec(s.trim()); return m ? m[1] : ""; }
+  function isCsv(s){ return /^https:\/\/docs\.google\.com\/spreadsheets\/d\/e\/.+output=csv/.test(s); }
+  function sheetMsg(t, bad){ $("sheetMsg").textContent = t; $("sheetMsg").className = "msg" + (bad ? " bad" : ""); }
+  function applySheet(payload, csv){
+    var list = csv ? parseCSV(payload) : parseSheet(payload);
+    if(list === null){
+      status("warn", "Check the sheet");
+      sheetMsg("Connected, but I can't find the form's columns. The sheet needs a column with “name” and one with “fact” in the heading.", true);
+      return;
+    }
+    var newOnes = 0;
+    list.forEach(function(f){ if(!seen[f.id]){ seen[f.id] = firstLoad ? true : "new"; if(!firstLoad) newOnes++; } });
+    firstLoad = false;
+    sheetFacts = list; source = "sheet";
+    status("live", "Live · " + stamp());
+    sheetMsg("Connected. " + list.length + (list.length === 1 ? " fact" : " facts") + " so far.", false);
+    note(newOnes ? "<b>" + newOnes + " new mystery passenger" + (newOnes === 1 ? "" : "s") + "</b> just boarded." : "");
+    render();
+  }
+  function handleError(err){
+    var c = err && err.code;
+    if(c === "server_not_connected"){ status("warn", "Google Drive not added"); sheetMsg("Add Google Drive in claude.ai Settings → Connectors, then reload this page. Or use Option 2.", true); retract(); }
+    else if(c === "needs_reauth"){ status("warn", "Reconnect Google Drive"); sheetMsg("Reconnect Google Drive in claude.ai Settings → Connectors, then reload this page.", true); retract(); }
+    else if(c === "not_in_manifest" || c === "approval_required" || c === "consent_required"){ status("warn", "Needs your OK"); sheetMsg("This page needs your permission to read the sheet. Press Check now and choose Allow.", true); retract(); }
+    else if(c === "selection_required"){ status("warn", "Choose an account"); sheetMsg("You have more than one Google Drive connected. Pick one when claude.ai asks, then press Check now.", true); }
+    else if(c === "blocked_by_policy"){ status("warn", "Blocked"); sheetMsg("Your organization blocks this Google Drive tool here. Use Option 2.", true); retract(); }
+    else if(c === "tool_error"){ status("warn", "Can't read sheet"); sheetMsg("Google Drive couldn't open that sheet. Check that the link is right and that it's in the Drive you connected.", true); }
+    else if(c === "server_unavailable" || c === "rate_limited"){ status("warn", "Retrying…"); sheetMsg("Google Drive didn't answer just now. The last facts stay on screen and the board tries again by itself.", false); }
+    else if(c === "not_granted" || c === "capability_disabled" || c === "capability_removed"){ status("", "Live link off"); sheetMsg("The live link isn't available in this view. Open the page in claude.ai, or use Option 2.", true); }
+    else { status("warn", "Connection problem"); sheetMsg("Something went wrong reading the sheet (" + (c || "unknown") + "). The last facts stay on screen.", true); }
+  }
+  function stopCsv(){ clearTimeout(csvTimer); csvTimer = 0; }
+  function pollCsv(){
+    stopCsv();
+    if(!isCsv(sheetLink) || source === "paste") return;
+    fetch(sheetLink + (sheetLink.indexOf("?") > -1 ? "&" : "?") + "t=" + Date.now(), { cache: "no-store" })
+      .then(function(r){ if(!r.ok) throw new Error(r.status); return r.text(); })
+      .then(function(t){
+        if(/^\s*</.test(t)){ status("warn", "Not published"); sheetMsg("That link opened a web page, not CSV. In the sheet: File → Share → Publish to web → choose CSV.", true); return; }
+        applySheet(t, true);
+      })
+      .catch(function(){ status("warn", "Retrying…"); sheetMsg("Couldn't reach the sheet just now. Check the Wi-Fi. The last facts stay on screen and the board keeps trying.", false); })
+      .then(function(){ if(isCsv(sheetLink) && source !== "paste") csvTimer = setTimeout(pollCsv, CSV_POLL_MS); });
+  }
+  function startLive(){
+    if(isCsv(sheetLink)){ if(unwatch){ unwatch(); unwatch = null; } status("", "Connecting…"); pollCsv(); return; }
+    sheetId = idFromLink(sheetLink);
+    if(!sheetId) return;
+    if(!mcp){ status("", "Paste mode"); sheetMsg("On a normal website, use the sheet's Publish to web CSV link (it ends in output=csv). Or use Option 2.", true); return; }
+    watch();
+  }
+  function retract(){ if(source === "sheet"){ sheetFacts = []; source = pasteFacts.length ? "paste" : "none"; render(); } }
+  function watch(){
+    if(unwatch){ unwatch(); unwatch = null; }
+    if(!mcp || !sheetId) return;
+    status("", "Connecting…");
+    unwatch = mcp.watchTool(SERVER, TOOL, { fileId: sheetId }, function(ev){
+      if(ev.type === "data") applySheet(ev.result && ev.result.payload !== undefined ? ev.result.payload : ev.result);
+      else handleError(ev.error);
+    }, { refetchInterval: POLL_MS });
+  }
+  function checkNow(){
+    if(!sheetLink){ sheetMsg("Paste the response sheet link first.", true); return; }
+    if(isCsv(sheetLink)){ pollCsv(); return; }
+    sheetId = idFromLink(sheetLink);
+    if(!mcp){ sheetMsg("On a normal website, use the sheet's Publish to web CSV link (it ends in output=csv). Or use Option 2.", true); return; }
+    $("refresh").disabled = true; status("", "Checking…");
+    mcp.callTool(SERVER, TOOL, { fileId: sheetId }, { cache: false })
+      .then(function(r){ applySheet(r.payload !== undefined ? r.payload : r); if(!unwatch) watch(); })
+      .catch(handleError)
+      .then(function(){ $("refresh").disabled = false; });
+  }
+
+  $("connect").addEventListener("click", function(){
+    var v = $("sheetIn").value.trim();
+    if(!isCsv(v) && !idFromLink(v)){ sheetMsg("That doesn't look like a Google Sheets link. Use the Publish to web CSV link (it ends in output=csv).", true); return; }
+    sheetLink = v; put(K.sheet, v); firstLoad = true; seen = {};
+    if(source === "paste" && !pasteFacts.length) source = "none";
+    if(isCsv(v)){ if(unwatch){ unwatch(); unwatch = null; } pollCsv(); } else checkNow();
+  });
+  $("refresh").addEventListener("click", checkNow);
+  $("disconnect").addEventListener("click", function(){
+    if(unwatch){ unwatch(); unwatch = null; } stopCsv();
+    sheetId = ""; sheetLink = ""; put(K.sheet, ""); $("sheetIn").value = ""; sheetFacts = [];
+    source = pasteFacts.length ? "paste" : "none"; status("", source === "paste" ? "Pasted facts" : "Not connected"); sheetMsg("Disconnected.", false); render();
+  });
+
+  // ----- Paste backup -----
+  var SAMPLE = ["Jordan (sample) | I once pretended to be sick to avoid an event.","Priya (sample) | I have a completely irrational fear.","Marcus (sample) | I've met a celebrity.","Lena (sample) | I once went on a date and left after 10 minutes.","Omar (sample) | I've been on television."].join("\n");
+  function pasteMsg(t, bad){ $("pasteMsg").textContent = t; $("pasteMsg").className = "msg" + (bad ? " bad" : ""); }
+  $("usePaste").addEventListener("click", function(){
+    var r = parsePaste($("pasteIn").value);
+    if(!r.items.length){ pasteMsg("No facts found. Put each one on its own line as Name | Fact.", true); return; }
+    if(unwatch){ unwatch(); unwatch = null; } stopCsv();
+    pasteFacts = r.items; put(K.paste, pasteFacts); source = "paste"; status("", "Pasted facts");
+    var boarded = boardPassengers(r.items);
+    pasteMsg("Loaded " + r.items.length + " facts." + (r.skipped ? " " + r.skipped + " line" + (r.skipped === 1 ? " was" : "s were") + " skipped (missing a name or fact)." : "") + (boarded ? " " + boarded + " new passenger" + (boarded === 1 ? "" : "s") + " added to the Passenger Board." : "") + (sheetId ? " The live sheet is paused while you use pasted facts." : ""), r.skipped > 0);
+    render();
+  });
+  $("sample").addEventListener("click", function(){ $("pasteIn").value = SAMPLE; pasteMsg("Sample facts added. Press Use these facts to try the board.", false); });
+  $("clearPaste").addEventListener("click", function(){
+    pasteFacts = []; put(K.paste, []); $("pasteIn").value = ""; put(K.done, {}); done = {};
+    if(source === "paste"){ source = "none"; status("", "Not connected"); if(sheetLink) startLive(); }
+    pasteMsg("Cleared.", false); render();
+  });
+
+  // ----- Controls -----
+  $("mAll").addEventListener("click", function(){ setMode("all"); });
+  $("mReveal").addEventListener("click", function(){ setMode("reveal"); renderTicket(byId(), true); });
+  $("mSetup").addEventListener("click", function(){ setMode("setup"); });
+  $("startReveal").addEventListener("click", function(){ setMode("reveal"); renderTicket(byId(), true); });
+  $("reveal").addEventListener("click", toggleReveal);
+  $("ticket").addEventListener("click", toggleReveal);
+  $("prev").addEventListener("click", function(){ go(-1); });
+  $("next").addEventListener("click", function(){ go(1); });
+  document.addEventListener("keydown", function(e){
+    if(mode !== "reveal") return;
+    var t = e.target && e.target.tagName;
+    if(t === "INPUT" || t === "TEXTAREA") return;
+    if(e.key === "ArrowRight"){ e.preventDefault(); go(1); }
+    else if(e.key === "ArrowLeft"){ e.preventDefault(); go(-1); }
+    else if((e.key === " " || e.key === "Enter") && t !== "BUTTON"){ e.preventDefault(); toggleReveal(); }
+  });
+
+  // ----- Passenger Board hand-off (same website, same computer) -----
+  // Same list, order and powerOf() as Boarding Pass.html and passengers.html.
+  var POWERS = ["The Critical Path Finder","The RAID Log Whisperer","The Scope Guardian","The Stakeholder Charmer",
+    "The Deadline Tamer","The Status Report Poet","The Dependency Detective","The Calm in the Crisis",
+    "The Milestone Maker","The Strategy Navigator","The Change Champion","The Lessons-Learned Sage",
+    "The Meeting Rescuer","The Big-Picture Builder"];
+  function powerOf(name){
+    var s = String(name).replace(/\s+/g," ").trim().toLowerCase(), h = 5381;
+    for(var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+    h = h >>> 0;
+    return { power: POWERS[h % POWERS.length], golden: Math.floor(h / 97) % 15 === 0 };
+  }
+  function boardPassengers(items){
+    try{
+      var MK = "pmo1104-manifest", list = JSON.parse(localStorage.getItem(MK) || "[]"), have = {}, added = 0;
+      list.forEach(function(p){ have[p.name.toLowerCase()] = true; });
+      var maxSeat = list.reduce(function(m,p){ return Math.max(m, p.n); }, -1);
+      items.forEach(function(f){
+        var n = f.n.slice(0,24); if(have[n.toLowerCase()]) return;
+        var w = powerOf(n); maxSeat++;
+        list.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2,6) + added, name:n, power:w.power, golden:w.golden, t:Date.now(), n:maxSeat, seat:(Math.floor(maxSeat/4)+1) + "ABCD"[maxSeat%4] });
+        have[n.toLowerCase()] = true; added++;
+      });
+      localStorage.setItem(MK, JSON.stringify(list));
+      return added;
+    }catch(e){ return 0; }
+  }
+  // Facts pasted on the Passenger Board show up here without reloading
+  addEventListener("storage", function(e){
+    if(e.key !== K.paste) return;
+    pasteFacts = get(K.paste, []);
+    if(source !== "sheet"){ source = pasteFacts.length ? "paste" : "none"; status("", pasteFacts.length ? "Pasted facts" : "Not connected"); }
+    $("pasteIn").value = pasteFacts.map(function(f){ return f.n + " | " + f.f; }).join("\n");
+    render();
+  });
+
+  // ----- Start -----
+  if(sheetLink) $("sheetIn").value = sheetLink;
+  if(pasteFacts.length){ source = "paste"; status("", "Pasted facts"); $("pasteIn").value = pasteFacts.map(function(f){ return f.n + " | " + f.f; }).join("\n"); }
+  var startMode = get(K.mode, "setup");
+  setMode(startMode === "reveal" && !facts().length ? "setup" : startMode);
+
+  var C = window.claude;
+  if(sheetLink && isCsv(sheetLink) && source !== "paste") startLive();
+  if(C && C.use){
+    C.use("mcp").then(function(ns){
+      mcp = ns;
+      if(sheetLink && !isCsv(sheetLink) && source !== "paste") startLive();
+    });
+  } else if(sheetLink && !isCsv(sheetLink)){
+    startLive();
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PMO 1104 Passenger Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;800;900&display=swap">
+<style>
+/* Layout: airport departures board. Header strip (flight, count, clock) → passenger rows in auto-fill columns → gate check-in panel (hidden in projector mode). */
+:root{
+  --green:#D4DF38;      /* Centennial Green */
+  --green-50:#E9EF9B;
+  --grey:#454546;       /* Centennial Grey */
+  --board:#2E2E2F;      /* departure-board panel */
+  --row:#3A3A3B;
+  --line:#555557;
+  --paper:#FFFFFF;
+  --muted:#B9B9BB;
+  --alert:#FFB4A8;
+  --font:"Franklin Gothic URW","Libre Franklin","Franklin Gothic Medium",Arial,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{margin:0;background:var(--grey);color:var(--paper);font-family:var(--font);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 32px}
+p,h1,h2{margin:0}
+.wrap{max-width:1400px;margin-inline:auto;display:flex;flex-direction:column;gap:20px}
+
+/* Header strip */
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px 32px;border-bottom:4px solid var(--green);padding-bottom:16px}
+.eyebrow{font-size:13px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--green)}
+h1{font-size:clamp(34px,5.5vw,76px);font-weight:900;line-height:.95;letter-spacing:-.02em;text-wrap:balance;margin-top:6px}
+.stats{display:flex;gap:28px;align-items:flex-end}
+.stat{display:flex;flex-direction:column;gap:2px;text-align:right}
+.stat .k{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.stat .v{font-size:clamp(28px,4vw,56px);font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
+.stat .v.green{color:var(--green)}
+.status{display:inline-block;background:var(--green);color:var(--grey);font-weight:900;letter-spacing:.12em;text-transform:uppercase;font-size:14px;padding:6px 10px;border-radius:4px;animation:blink 2.4s steps(1) infinite}
+
+/* Board */
+.board{background:var(--board);border-radius:14px;padding:14px;min-height:240px}
+.cols{display:grid;grid-template-columns:1fr;gap:14px;padding:0 0 8px}
+.cols>div{display:grid;grid-template-columns:4.2em minmax(0,1fr) minmax(0,1.3fr) 5.5em;gap:12px;padding:0 14px;
+  font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.cols>div+div{display:none}
+.list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr;gap:8px 14px}
+@media (min-width:1150px){.list,.cols{grid-template-columns:repeat(2,minmax(0,1fr))}.cols>div+div{display:grid}}
+.list li{display:grid;grid-template-columns:4.2em minmax(0,1fr) minmax(0,1.3fr) 5.5em;gap:12px;align-items:center;
+  background:var(--row);border-radius:8px;padding:12px 14px;position:relative}
+.seat{font-weight:900;color:var(--green);font-size:20px;font-variant-numeric:tabular-nums}
+.name{font-weight:900;font-size:clamp(18px,1.7vw,24px);overflow-wrap:anywhere}
+.power{font-size:15px;color:var(--muted);overflow-wrap:anywhere}
+.power.rare{font-weight:800;background:linear-gradient(90deg,#FF8FB1,#FFD27A,#D4DF38,#7BE3C4,#7CCBFF,#C3A4FF);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.time{font-size:15px;font-weight:600;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.list li.new{animation:flap .7s cubic-bezier(.2,.9,.25,1)}
+.list li.new .name{color:var(--green)}
+.rm{position:absolute;top:6px;right:6px;appearance:none;border:0;background:transparent;color:var(--muted);font:inherit;font-size:12px;font-weight:800;padding:4px 8px;border-radius:4px;cursor:pointer;opacity:0}
+.list li:hover .rm,.list li:focus-within .rm,.rm.armed{opacity:1}
+.rm.armed{background:var(--alert);color:var(--grey)}
+body.screen .rm{display:none}
+.empty{padding:40px 14px;text-align:center;color:var(--muted);font-size:18px;line-height:1.5}
+.empty b{color:var(--paper)}
+
+/* Gate check-in */
+.gate{background:var(--paper);color:var(--grey);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.gate h2{font-size:20px;font-weight:900}
+.gate form{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1.4fr) auto;gap:10px;align-items:end}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#6E6D70}
+.gate input,.gate select{width:100%;font:inherit;font-size:18px;font-weight:600;padding:12px;border:2px solid #D8D8D6;border-radius:8px;background:#FBFBF8;color:var(--grey)}
+.gate input:focus,.gate select:focus{outline:3px solid var(--green);outline-offset:1px;border-color:var(--grey)}
+.btn{appearance:none;border:0;border-radius:8px;font:inherit;font-weight:900;font-size:18px;padding:14px 22px;cursor:pointer;background:var(--green);color:var(--grey)}
+.btn:focus-visible,.link:focus-visible,.rm:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+.msg{font-size:15px;font-weight:600;min-height:1.3em}
+.import{border-top:2px dashed #D8D8D6;padding-top:14px;display:flex;flex-direction:column;gap:10px}
+.import .hint{font-size:15px;line-height:1.45;color:#4A494C}
+.import textarea{width:100%;font:inherit;font-size:15px;padding:12px;border:2px solid #D8D8D6;border-radius:8px;background:#FBFBF8;color:var(--grey);resize:vertical}
+.import textarea:focus{outline:3px solid var(--green);outline-offset:1px;border-color:var(--grey)}
+.import .row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.msg.bad{color:#9B1C1C}
+.tools{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;font-size:14px;color:#6E6D70}
+.link{appearance:none;background:none;border:0;padding:4px 0;font:inherit;font-size:14px;font-weight:700;color:var(--grey);text-decoration:underline;cursor:pointer}
+.link.danger.armed{color:#9B1C1C}
+.warn{background:#FFF1C2;color:#5A4500;border-radius:8px;padding:10px 12px;font-size:14px}
+.exit{position:fixed;right:max(12px,env(safe-area-inset-right,0px));bottom:max(12px,env(safe-area-inset-bottom,0px));appearance:none;border:0;background:rgba(0,0,0,.25);color:var(--muted);font:inherit;font-size:12px;padding:6px 10px;border-radius:6px;cursor:pointer;opacity:.35}
+.exit:hover,.exit:focus-visible{opacity:1}
+
+@media (max-width:720px){
+  .gate form{grid-template-columns:1fr}
+  .cols{display:none}
+  .list li{grid-template-columns:3.2em minmax(0,1fr) auto;grid-template-areas:"s n t" "s p p"}
+  .seat{grid-area:s}.name{grid-area:n}.power{grid-area:p}.time{grid-area:t}
+  .stats{width:100%;justify-content:space-between}.stat{text-align:left}
+}
+@keyframes flap{0%{transform:rotateX(90deg);opacity:0}60%{transform:rotateX(-12deg);opacity:1}100%{transform:none}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.55}}
+@media (prefers-reduced-motion:reduce){.list li.new,.status{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <p class="eyebrow">Centennial College · Flight PMO 1104 · PMO → SMO</p>
+      <h1>Passengers on board</h1>
+    </div>
+    <div class="stats">
+      <div class="stat"><span class="k">Status</span><span class="status" id="status">Boarding</span></div>
+      <div class="stat"><span class="k">On board</span><span class="v green" id="count">0</span></div>
+      <div class="stat"><span class="k">Local time</span><span class="v" id="clock">--:--</span></div>
+    </div>
+  </header>
+
+  <section class="board" aria-label="Passenger list">
+    <div class="cols" aria-hidden="true"><div><span>Seat</span><span>Passenger</span><span>Superpower</span><span style="text-align:right">Boarded</span></div><div><span>Seat</span><span>Passenger</span><span>Superpower</span><span style="text-align:right">Boarded</span></div></div>
+    <ol class="list" id="list" aria-live="polite"></ol>
+    <p class="empty" id="empty">No passengers yet.<br>Paste the Microsoft Forms responses below, or type a first name at the gate and press <b>Board</b>.</p>
+  </section>
+
+  <section class="gate" id="gate" aria-labelledby="gateTitle">
+    <h2 id="gateTitle">Gate check-in</h2>
+    <p class="warn" id="noStore" hidden>This browser is not saving the list (private window or blocked storage). Open this page in a normal window before guests arrive.</p>
+    <form id="form" novalidate>
+      <div class="field">
+        <label for="pName">Passenger first name</label>
+        <input id="pName" type="text" maxlength="24" autocomplete="off" autocapitalize="words" enterkeyhint="done">
+      </div>
+      <div class="field">
+        <label for="pPower">Superpower</label>
+        <select id="pPower"><option value="auto">Automatic (matches their pass)</option></select>
+      </div>
+      <button class="btn" type="submit">Board ✈</button>
+    </form>
+    <p class="msg" id="msg" role="status"></p>
+    <div class="import">
+      <h2>Board everyone from Microsoft Forms</h2>
+      <p class="hint">Responses tab → <b>Open results in Excel</b> → click any cell → <b>Ctrl + A</b>, <b>Ctrl + C</b> → click the box below → <b>Ctrl + V</b> → <b>Board them all</b>. Superpowers fill in by themselves. Paste again any time: people already on board are skipped. Their secret facts are also loaded into the <b>Who Said That</b> board on this computer.</p>
+      <label class="sr" for="importIn">Paste from Excel</label>
+      <textarea id="importIn" rows="4" placeholder="Paste the Excel rows here (Ctrl + V)"></textarea>
+      <div class="row"><button class="btn" id="importBtn" type="button">Board them all ✈</button><button class="link" id="importClear" type="button">Clear box</button></div>
+      <p class="msg" id="importMsg" role="status"></p>
+    </div>
+    <div class="tools">
+      <button class="link" id="screenBtn" type="button">Switch to projector mode</button>
+      <a class="link" href="#screen" target="_blank" rel="noopener">Open projector screen in a new window</a>
+      <button class="link danger" id="clearBtn" type="button">Clear all passengers</button>
+    </div>
+  </section>
+
+</div>
+<button class="exit" id="exitBtn" type="button" hidden>Gate check-in</button>
+
+<script>
+(function(){
+  // Same list, same order, same powerOf() as the welcome gift (Boarding Pass.html). Change one, change both.
+  var POWERS = [
+    "The Critical Path Finder","The RAID Log Whisperer","The Scope Guardian","The Stakeholder Charmer",
+    "The Deadline Tamer","The Status Report Poet","The Dependency Detective","The Calm in the Crisis",
+    "The Milestone Maker","The Strategy Navigator","The Change Champion","The Lessons-Learned Sage",
+    "The Meeting Rescuer","The Big-Picture Builder"
+  ];
+  var GOLDEN_EVERY = 15;
+  var RARE = "🏆 Golden Gantt";
+  function powerOf(name){
+    var s = String(name).replace(/\s+/g," ").trim().toLowerCase(), h = 5381;
+    for(var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+    h = h >>> 0;
+    return { p: h % POWERS.length, golden: GOLDEN_EVERY > 0 && Math.floor(h / 97) % GOLDEN_EVERY === 0 };
+  }
+  function autoPower(name){ var w = powerOf(name); return { power: POWERS[w.p], golden: w.golden }; }
+  var KEY = "pmo1104-manifest";
+  var SEATS = "ABCD";
+
+  var $ = function(id){ return document.getElementById(id); };
+  var memory = [], stored = true, lastAdded = null;
+
+  // ----- Storage (shared between windows on this computer) -----
+  function load(){
+    try{ var v = localStorage.getItem(KEY); return v ? JSON.parse(v) : []; }
+    catch(e){ stored = false; return memory; }
+  }
+  function save(list){
+    memory = list;
+    try{ localStorage.setItem(KEY, JSON.stringify(list)); }catch(e){ stored = false; }
+  }
+  function norm(s){ return s.replace(/\s+/g," ").trim(); }
+  function seatFor(n){ return (Math.floor(n/4)+1) + SEATS[n%4]; }
+  function fmt(t){ return new Date(t).toLocaleTimeString([], {hour:"numeric", minute:"2-digit"}); }
+
+  // ----- Render -----
+  function render(){
+    var list = load(), ul = $("list");
+    ul.textContent = "";
+    $("count").textContent = list.length;
+    $("empty").hidden = list.length > 0;
+    list.slice().reverse().forEach(function(p){
+      var li = document.createElement("li");
+      if(p.id === lastAdded) li.className = "new";
+      var seat = document.createElement("span"); seat.className = "seat"; seat.textContent = p.seat;
+      var name = document.createElement("span"); name.className = "name"; name.textContent = p.name;
+      var power = document.createElement("span"); power.className = "power" + (p.golden ? " rare" : ""); power.textContent = (p.power || "—") + (p.golden ? " · " + RARE : "");
+      var time = document.createElement("span"); time.className = "time"; time.textContent = fmt(p.t);
+      var rm = document.createElement("button"); rm.type = "button"; rm.className = "rm"; rm.textContent = "Remove";
+      rm.setAttribute("aria-label", "Remove " + p.name);
+      rm.addEventListener("click", function(){
+        if(!rm.classList.contains("armed")){ rm.classList.add("armed"); rm.textContent = "Tap again to remove"; setTimeout(function(){ rm.classList.remove("armed"); rm.textContent = "Remove"; }, 3000); return; }
+        save(load().filter(function(x){ return x.id !== p.id; })); say(p.name + " was removed from the list.", false); render();
+      });
+      li.append(seat, name, power, time, rm);
+      ul.appendChild(li);
+    });
+    $("noStore").hidden = stored;
+  }
+
+  function say(t, bad){ $("msg").textContent = t; $("msg").className = "msg" + (bad ? " bad" : ""); }
+
+  // ----- Gate check-in -----
+  var sel = $("pPower");
+  sel.options[0].textContent = "Automatic (matches their pass)"; sel.options[0].value = "auto";
+  var none = document.createElement("option"); none.value = ""; none.textContent = "Not shown"; sel.appendChild(none);
+  POWERS.forEach(function(n){ var o = document.createElement("option"); o.value = n; o.textContent = n; sel.appendChild(o); });
+  sel.value = "auto";
+
+  $("form").addEventListener("submit", function(e){
+    e.preventDefault();
+    var n = norm($("pName").value).slice(0,24);
+    if(!n){ say("Type the passenger's first name first.", true); $("pName").focus(); return; }
+    var list = load();
+    var dup = list.some(function(p){ return p.name.toLowerCase() === n.toLowerCase(); });
+    if(dup){ say(n + " is already on board. If this is a different person, add a last initial (for example, " + n + " K.).", true); $("pName").select(); return; }
+    var maxSeat = list.reduce(function(m,p){ return Math.max(m, p.n); }, -1);
+    var ap = autoPower(n), choice = sel.value;
+    var p = { id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), name:n,
+      power: choice === "auto" ? ap.power : choice, golden: choice === "auto" ? ap.golden : false, t:Date.now(), n:maxSeat+1 };
+    p.seat = seatFor(p.n);
+    list.push(p); save(list); lastAdded = p.id;
+    say(n + " boarded. Seat " + p.seat + ".", false);
+    $("pName").value = ""; sel.value = "auto"; $("pName").focus();
+    render();
+  });
+
+  $("clearBtn").addEventListener("click", function(){
+    var b = $("clearBtn");
+    if(!b.classList.contains("armed")){ b.classList.add("armed"); b.textContent = "Tap again to clear everyone"; setTimeout(function(){ b.classList.remove("armed"); b.textContent = "Clear all passengers"; }, 4000); return; }
+    save([]); lastAdded = null; b.classList.remove("armed"); b.textContent = "Clear all passengers"; say("The list is empty.", false); render();
+  });
+
+  // ----- Import from Microsoft Forms (Excel copy) -----
+  function parseTSV(text){
+    var rows = [], row = [], cur = "", inQ = false, atStart = true;
+    for(var i = 0; i < text.length; i++){
+      var c = text[i];
+      if(inQ){ if(c === '"'){ if(text[i+1] === '"'){ cur += '"'; i++; } else inQ = false; } else cur += c; continue; }
+      if(c === '"' && atStart){ inQ = true; atStart = false; continue; }
+      atStart = false;
+      if(c === "\t"){ row.push(cur); cur = ""; atStart = true; }
+      else if(c === "\n" || c === "\r"){ if(c === "\r" && text[i+1] === "\n") i++; row.push(cur); rows.push(row); row = []; cur = ""; atStart = true; }
+      else cur += c;
+    }
+    if(cur || row.length){ row.push(cur); rows.push(row); }
+    return rows.filter(function(r){ return r.some(function(c){ return c.trim(); }); });
+  }
+  function findCol(h, re, not){ for(var k = 0; k < h.length; k++){ if(k !== not && re.test(h[k])) return k; } return -1; }
+  function wstHash(s){ var h = 5381; for(var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return "f" + (h >>> 0).toString(36); }
+  function importSay(t, bad){ $("importMsg").textContent = t; $("importMsg").className = "msg" + (bad ? " bad" : ""); }
+
+  $("importBtn").addEventListener("click", function(){
+    var rows = parseTSV($("importIn").value);
+    if(!rows.length){ importSay("The box is empty. Copy the rows from Excel first.", true); return; }
+    var h = rows[0], fc = findCol(h, /fact|secret/i), nc = findCol(h, /first\s*name/i, fc), tc = findCol(h, /completion\s*time/i);
+    if(nc < 0) nc = findCol(h, /name/i, fc);
+    var body = rows.slice(1);
+    if(nc < 0){ nc = 0; fc = h.length > 1 ? 1 : -1; tc = -1; body = rows; } // no header row: Name, Fact
+    var list = load(), added = 0, skipped = 0, facts = [];
+    var have = {}; list.forEach(function(p){ have[p.name.toLowerCase()] = true; });
+    var maxSeat = list.reduce(function(m,p){ return Math.max(m, p.n); }, -1);
+    body.forEach(function(r){
+      var n = norm(r[nc] || "").slice(0,24);
+      if(!n || /^anonymous$/i.test(n) || /^(first )?name$/i.test(n)){ skipped++; return; }
+      var fact = fc > -1 ? norm(r[fc] || "") : "";
+      if(fact) facts.push({ id: wstHash("p|" + n + "|" + fact), n: n.slice(0,40), f: fact.slice(0,280) });
+      if(have[n.toLowerCase()]) return;
+      var t = tc > -1 ? Date.parse(r[tc]) : NaN;
+      var ap = autoPower(n);
+      maxSeat++;
+      var p = { id: Date.now().toString(36) + Math.random().toString(36).slice(2,6) + added, name:n, power:ap.power, golden:ap.golden, t: isNaN(t) ? Date.now() : t, n:maxSeat };
+      p.seat = seatFor(p.n); list.push(p); have[n.toLowerCase()] = true; added++; lastAdded = p.id;
+    });
+    save(list); render();
+    // Hand the secret facts to the Who Said That board (same website, same computer)
+    var wst = 0;
+    if(facts.length){
+      try{
+        var cur = JSON.parse(localStorage.getItem("wst-paste") || "[]"), ids = {};
+        cur.forEach(function(f){ ids[f.id] = true; });
+        facts.forEach(function(f){ if(!ids[f.id]){ cur.push(f); ids[f.id] = true; wst++; } });
+        localStorage.setItem("wst-paste", JSON.stringify(cur));
+      }catch(e){}
+    }
+    if(!added && !wst && !skipped && body.length){ importSay("Everyone in that list is already on board. ✓", false); $("importIn").value = ""; return; }
+    importSay(added + " new passenger" + (added === 1 ? "" : "s") + " boarded" + (wst ? ", " + wst + " secret fact" + (wst === 1 ? "" : "s") + " ready for Who Said That" : "") + (skipped ? ". Skipped " + skipped + " row" + (skipped === 1 ? "" : "s") + " with no name." : "."), added === 0 && !wst);
+    $("importIn").value = "";
+  });
+  $("importClear").addEventListener("click", function(){ $("importIn").value = ""; importSay("", false); });
+
+  // ----- Projector mode -----
+  function route(){
+    var screen = location.hash === "#screen";
+    document.body.classList.toggle("screen", screen);
+    $("gate").hidden = screen; $("exitBtn").hidden = !screen;
+  }
+  $("screenBtn").addEventListener("click", function(){ location.hash = "screen"; });
+  $("exitBtn").addEventListener("click", function(){ history.replaceState(null, "", location.pathname + location.search); route(); });
+  addEventListener("hashchange", route);
+
+  // Another window on this computer boarded someone: show it here too
+  addEventListener("storage", function(e){
+    if(e.key !== KEY) return;
+    var before = memory.map(function(p){ return p.id; });
+    var now = load(); memory = now;
+    var fresh = now.filter(function(p){ return before.indexOf(p.id) < 0; });
+    lastAdded = fresh.length ? fresh[fresh.length-1].id : null;
+    render();
+  });
+
+  // ----- Clock & status -----
+  function tick(){
+    var d = new Date();
+    $("clock").textContent = d.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
+    var m = d.getHours()*60 + d.getMinutes();
+    var day = d.getFullYear() === 2026 && d.getMonth() === 10 && d.getDate() === 4;
+    $("status").textContent = day && m >= 930 ? "Landed" : day && m >= 790 ? "In flight" : "Boarding";
+  }
+  tick(); setInterval(tick, 15000);
+
+  memory = load(); route(); render();
+})();
+</script>
+</body>
+</html>

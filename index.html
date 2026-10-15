@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+</head>
+<body>
+<title>PMO & SMO Welcome Gift</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;800;900&display=swap">
+<style>
+/* Layout: one dark "stage"; scenes swap in place: claim → gift box → flip card. #host = projector view with QR. */
+:root{
+  --green:#D4DF38;      /* Centennial Green */
+  --green-75:#DFE76A;
+  --green-50:#E9EF9B;
+  --green-20:#F6F9D7;
+  --grey:#454546;       /* Centennial Grey */
+  --grey-deep:#373738;
+  --text:#414042;       /* Centennial Text */
+  --soft:#6E6D70;
+  --paper:#FFFFFF;
+  --font:"Franklin Gothic URW","Libre Franklin","Franklin Gothic Medium",Arial,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{height:100%}
+body{min-height:100%;margin:0;display:flex;flex-direction:column;background:var(--grey);color:var(--paper);font-family:var(--font);-webkit-tap-highlight-color:transparent}
+.stage{flex:1;display:flex;flex-direction:column;padding-inline:16px;padding-block:28px 32px;
+  background:radial-gradient(ellipse 70% 45% at 50% 42%, rgba(212,223,56,.16), transparent 70%), var(--grey)}
+p,h1,h2,h3,ol{margin:0}
+.eyebrow{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--green)}
+.fine{font-size:13px;line-height:1.45;color:rgba(255,255,255,.72);max-width:34ch}
+.btn{appearance:none;border:0;border-radius:8px;font:inherit;font-weight:800;font-size:17px;padding:15px 20px;cursor:pointer;background:var(--green);color:var(--grey);letter-spacing:.01em}
+.btn:active{transform:translateY(1px)}
+.btn:focus-visible,.linkbtn:focus-visible,.flipbtn:focus-visible{outline:3px solid var(--green);outline-offset:3px}
+.linkbtn{appearance:none;background:none;border:0;padding:6px;color:rgba(255,255,255,.72);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer}
+
+.scene{width:100%;max-width:420px;margin-inline:auto;display:flex;flex-direction:column;align-items:center;text-align:center;gap:18px}
+
+/* ---------- 1. Claim ---------- */
+#claim{flex:1;justify-content:center;text-align:left;align-items:stretch;gap:22px}
+#claim h1{font-size:clamp(38px,11vw,54px);line-height:.98;font-weight:900;letter-spacing:-.02em;text-wrap:balance}
+#claim h1 em{font-style:normal;color:var(--green)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips span{border:1.5px solid rgba(255,255,255,.35);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600}
+#claimForm{display:flex;flex-direction:column;gap:10px}
+#claimForm label{font-weight:800;font-size:14px}
+#nameInput{width:100%;font:inherit;font-size:20px;font-weight:600;padding:15px 16px;border:0;border-radius:8px;background:var(--paper);color:var(--text)}
+#nameInput:focus{outline:3px solid var(--green);outline-offset:2px}
+.err{color:var(--green-50);font-size:14px;min-height:1.2em}
+
+/* ---------- 2. Gift box ---------- */
+#gift{flex:1;justify-content:center}
+#giftFor{font-size:clamp(34px,10vw,48px);font-weight:900;line-height:1;letter-spacing:-.01em;word-break:break-word}
+.box{position:relative;width:220px;height:232px;margin-block:36px 6px;border:0;padding:0;background:none;cursor:pointer;--amp:4deg}
+.box:focus-visible{outline:3px solid var(--green);outline-offset:14px;border-radius:14px}
+.rays{position:absolute;inset:-80px;border-radius:50%;pointer-events:none;
+  background:repeating-conic-gradient(rgba(212,223,56,.22) 0 9deg, transparent 9deg 18deg);
+  -webkit-mask:radial-gradient(circle, #000 25%, transparent 68%);mask:radial-gradient(circle, #000 25%, transparent 68%);
+  animation:spin 22s linear infinite;transition:opacity .6s, transform .8s}
+.body{position:absolute;left:12px;right:12px;bottom:0;height:150px;border-radius:6px;
+  background:linear-gradient(90deg,transparent calc(50% - 16px),var(--grey-deep) calc(50% - 16px),var(--grey-deep) calc(50% + 16px),transparent calc(50% + 16px)),var(--green);
+  box-shadow:inset 0 -16px 0 rgba(0,0,0,.07),0 22px 40px rgba(0,0,0,.38)}
+.lid{position:absolute;left:0;right:0;top:46px;height:48px;border-radius:6px;transform-origin:15% 100%;
+  background:linear-gradient(90deg,transparent calc(50% - 18px),var(--grey-deep) calc(50% - 18px),var(--grey-deep) calc(50% + 18px),transparent calc(50% + 18px)),var(--green-75);
+  box-shadow:0 7px 0 rgba(0,0,0,.13);transition:transform .9s cubic-bezier(.2,.9,.25,1),opacity .9s}
+.bow{position:absolute;left:50%;top:0;width:0;height:0}
+.bow i{position:absolute;top:-38px;width:62px;height:44px;border:13px solid var(--grey-deep);border-radius:50% 50% 45% 45%}
+.bow i:first-child{right:-2px;transform:rotate(-18deg);transform-origin:100% 100%}
+.bow i:last-child{left:-2px;transform:rotate(18deg);transform-origin:0 100%}
+.bow::after{content:"";position:absolute;left:-14px;top:-14px;width:28px;height:24px;border-radius:8px;background:var(--grey-deep)}
+.tag{position:absolute;right:-26px;top:118px;background:var(--paper);color:var(--grey);font-size:13px;font-weight:600;padding:7px 12px 7px 18px;border-radius:4px 10px 10px 4px;transform:rotate(9deg);box-shadow:0 6px 14px rgba(0,0,0,.25);max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tag::before{content:"";position:absolute;left:6px;top:50%;width:6px;height:6px;margin-top:-3px;border-radius:50%;background:var(--grey)}
+.tag b{font-weight:900}
+.box.wiggle{animation:wiggle .5s ease-in-out}
+.box.open .lid{transform:translate(-40px,-190px) rotate(-38deg);opacity:0}
+.box.open .rays{opacity:1;transform:scale(1.35)}
+.box.open .body{animation:thump .5s ease-out}
+.box.open .tag{opacity:0;transition:opacity .3s}
+.hint{font-size:17px;font-weight:800;color:var(--paper);min-height:1.3em}
+.dots{display:flex;gap:10px}
+.dots i{width:12px;height:12px;border-radius:50%;border:2px solid var(--green);transition:background .2s}
+.dots i.on{background:var(--green)}
+
+/* ---------- 3. Reveal card ---------- */
+#reveal{gap:16px;padding-top:4px}
+.flip{width:100%;perspective:1600px}
+.flip.enter{animation:rise .8s cubic-bezier(.2,.9,.25,1)}
+.flip-inner{display:grid;transform-style:preserve-3d;transition:transform .75s cubic-bezier(.3,.7,.2,1)}
+.flip.flipped .flip-inner{transform:rotateY(180deg)}
+.face{grid-area:1/1;-webkit-backface-visibility:hidden;backface-visibility:hidden;background:var(--paper);color:var(--text);border-radius:16px;overflow:hidden;text-align:left;display:flex;flex-direction:column;box-shadow:0 26px 60px rgba(0,0,0,.45)}
+.back{transform:rotateY(180deg)}
+.card-head{background:var(--green);color:var(--grey);padding:20px 20px 22px;display:flex;flex-direction:column;gap:6px;
+  border-bottom:2px dashed rgba(69,69,70,.45)}
+.card-head .eyebrow{color:var(--grey)}
+.card-head h2{font-size:clamp(30px,9vw,38px);font-weight:900;line-height:1;letter-spacing:-.015em;word-break:break-word}
+.block{padding:18px 20px;display:flex;flex-direction:column;gap:6px}
+.block + .block{border-top:1px solid #E6E6E4}
+.label{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--soft)}
+.power{font-size:24px;font-weight:900;color:var(--grey);line-height:1.1;letter-spacing:-.01em}
+.desc,#mText{font-size:16px;line-height:1.45}
+.wst{background:var(--green-20);flex:1}
+.front .from{padding-top:12px;background:var(--paper)}
+.wst-title{font-size:22px;font-weight:900;color:var(--grey);line-height:1.1}
+.wst-eg{font-size:14px;color:var(--soft);font-style:italic}
+.wst .btn{align-self:flex-start;font-size:15px;padding:11px 16px;margin-top:6px;background:var(--grey);color:var(--green);text-decoration:none}
+.wst-note{font-size:13px;color:var(--soft)}
+.golden{margin:16px 20px 0;padding:14px 16px;border-radius:10px;background:var(--grey);color:var(--paper);display:flex;flex-direction:column;gap:4px;position:relative;overflow:hidden}
+.golden strong{font-size:20px;font-weight:900;color:var(--green);letter-spacing:.02em}
+.golden span{font-size:14px;line-height:1.4}
+.golden::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(212,223,56,.28) 50%,transparent 65%);background-size:250% 100%;animation:shine 2.6s linear infinite}
+.flipbtn{appearance:none;margin-top:auto;border:0;border-top:1px solid #E6E6E4;background:var(--paper);color:var(--grey);font:inherit;font-weight:800;font-size:15px;padding:16px 20px;text-align:left;cursor:pointer;display:flex;justify-content:space-between;gap:12px}
+.flipbtn span{color:var(--soft);font-weight:600}
+.from{padding:0 20px 14px;font-size:12px;color:var(--soft)}
+
+/* Boarding pass */
+.bp-head{background:var(--grey);color:var(--paper);padding:16px 20px;display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.bp-head b{font-size:20px;font-weight:900;letter-spacing:.04em;text-transform:uppercase}
+.bp-head span{color:var(--green);font-weight:800;font-size:13px;letter-spacing:.12em}
+.bp-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 12px;padding:16px 20px}
+.bp-grid .v{font-size:17px;font-weight:900;color:var(--grey);margin-top:2px;word-break:break-word}
+.bp-grid .wide{grid-column:span 2}
+.perf{height:22px;position:relative;margin-inline:-1px;
+  background:radial-gradient(circle at 0 50%, var(--grey) 10px, transparent 11px),radial-gradient(circle at 100% 50%, var(--grey) 10px, transparent 11px)}
+.perf::after{content:"";position:absolute;left:18px;right:18px;top:50%;border-top:2px dashed #D3D3D1}
+.itin{list-style:none;padding:4px 20px 12px;display:flex;flex-direction:column}
+.itin li{display:grid;grid-template-columns:4.6em 1fr;gap:10px;padding:7px 0;font-size:15px;border-bottom:1px solid #EFEFED}
+.itin li:last-child{border-bottom:0}
+.itin time{font-weight:800;color:var(--grey);font-variant-numeric:tabular-nums}
+.itin small{color:var(--soft);font-size:13px}
+.barcode{height:46px;margin:4px 20px 16px;background:repeating-linear-gradient(90deg,var(--grey) 0 2px,transparent 2px 4px,var(--grey) 4px 7px,transparent 7px 9px,var(--grey) 9px 10px,transparent 10px 13px)}
+
+/* ---------- Host / projector view ---------- */
+#host{flex:1;width:100%;max-width:1240px;margin-inline:auto;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:56px;align-items:center;padding-block:24px}
+.host-title{font-size:clamp(56px,8.4vw,128px);font-weight:900;line-height:.9;letter-spacing:-.03em}
+.host-title em{font-style:normal;color:var(--green)}
+.host-copy{display:flex;flex-direction:column;gap:22px}
+.host-copy p.big{font-size:clamp(22px,2.4vw,32px);font-weight:600;line-height:1.25;max-width:24ch}
+.host-agenda{list-style:none;padding:0;display:flex;flex-direction:column;gap:2px;max-width:520px}
+.host-agenda li{display:grid;grid-template-columns:5.2em 1fr;gap:12px;padding:8px 12px;border-radius:8px;font-size:clamp(16px,1.5vw,20px)}
+.host-agenda time{font-weight:800;font-variant-numeric:tabular-nums;color:var(--green-50)}
+.host-agenda li.now{background:var(--green);color:var(--grey)}
+.host-agenda li.now time{color:var(--grey)}
+.qr-card{background:var(--paper);color:var(--grey);border-radius:20px;padding:28px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;box-shadow:0 30px 70px rgba(0,0,0,.4)}
+.qr-card .qr{width:100%;max-width:380px;aspect-ratio:1;display:grid;place-items:center}
+.qr-card .qr svg{width:100%;height:auto;display:block}
+.qr-card b{font-size:clamp(22px,2.2vw,30px);font-weight:900}
+.qr-card span{font-size:15px;color:var(--soft)}
+#clock{font-size:15px;font-weight:600;color:rgba(255,255,255,.72);font-variant-numeric:tabular-nums}
+@media (max-width:820px){#host{grid-template-columns:1fr;gap:32px}}
+
+
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes wiggle{0%,100%{transform:rotate(0)}20%{transform:rotate(calc(var(--amp) * -1)) translateY(-3px)}40%{transform:rotate(var(--amp))}60%{transform:rotate(calc(var(--amp) * -.6)) translateY(-2px)}80%{transform:rotate(calc(var(--amp) * .5))}}
+@keyframes thump{0%{transform:scaleY(1)}30%{transform:scaleY(.9) scaleX(1.05)}100%{transform:scale(1)}}
+@keyframes rise{from{transform:translateY(70px) scale(.88);opacity:0}to{transform:none;opacity:1}}
+@keyframes stamp{from{transform:rotate(-6deg) scale(2.2);opacity:0}to{transform:rotate(-6deg) scale(1);opacity:1}}
+@keyframes shine{from{background-position:150% 0}to{background-position:-100% 0}}
+@media (prefers-reduced-motion:reduce){
+  .rays,.golden::after{animation:none}
+  .box.wiggle,.box.open .body,.flip.enter,.stamp{animation:none}
+  .lid,.flip-inner{transition-duration:.01s}
+}
+</style>
+
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<main class="stage">
+
+  <!-- 1. Claim -->
+  <section id="claim" class="scene" aria-labelledby="claimTitle">
+    <p class="eyebrow">Centennial College · PMO &amp; SMO Day</p>
+    <h1 id="claimTitle">There's a gift here with <em>your name</em> on it.</h1>
+    <div class="chips" aria-label="Event details">
+      <span>Wed, Nov 4</span><span>1:00 – 3:30 PM</span><span>Room A2-39</span>
+    </div>
+    <form id="claimForm" novalidate>
+      <label for="nameInput">Your first name</label>
+      <input id="nameInput" name="firstName" type="text" maxlength="24" autocomplete="given-name" autocapitalize="words" enterkeyhint="go" placeholder="e.g. Alex">
+      <p class="err" id="err" role="alert"></p>
+      <button class="btn" type="submit">Find my gift</button>
+    </form>
+    <p class="fine">Your name stays on this phone. It only leaves if you choose to send a secret fact.</p>
+  </section>
+
+  <!-- 2. Gift box -->
+  <section id="gift" class="scene" hidden aria-labelledby="giftFor">
+    <p class="eyebrow">Special delivery for</p>
+    <h2 id="giftFor"></h2>
+    <button id="box" class="box" type="button" aria-label="Gift box. Tap three times to open it.">
+      <span class="rays"></span>
+      <span class="body"></span>
+      <span class="lid"><span class="bow"><i></i><i></i></span></span>
+      <span class="tag">For <b id="tagName"></b></span>
+    </button>
+    <p class="hint" id="hint" aria-live="polite">Tap the gift 3 times to open it</p>
+    <div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
+    <button class="linkbtn" id="restart" type="button">Not you? Start over</button>
+  </section>
+
+  <!-- 3. Reveal -->
+  <section id="reveal" class="scene" hidden aria-label="Your welcome card">
+    <div class="flip" id="flip">
+      <div class="flip-inner">
+
+        <article class="face front" id="front">
+          <header class="card-head">
+            <span class="eyebrow">PMO &amp; SMO Day 2026</span>
+            <h2>Welcome, <span id="cName"></span></h2>
+          </header>
+          <div class="golden" id="golden" hidden>
+            <strong>You found the Golden Gantt</strong>
+            <span>Only a few of today's gifts hold one. Show this screen to the event host to claim your prize.</span>
+          </div>
+          <div class="block">
+            <p class="label">Your PMO superpower</p>
+            <p class="power" id="pTitle"></p>
+            <p class="desc" id="pDesc"></p>
+          </div>
+          <div class="block wst">
+            <p class="label">Who Said That? · your secret fact</p>
+            <p class="wst-title">Become a mystery passenger</p>
+            <p class="desc">Send one surprising or funny fact about yourself. It boards the big screen on a boarding pass with your name hidden, and later the room tries to guess it’s you.</p>
+            <p class="wst-eg">Like “I’ve met a celebrity” or “I have a completely irrational fear.”</p>
+            <a class="btn" id="wstLink" href="#" target="_blank" rel="noopener" hidden>Send my secret fact</a>
+            <p class="wst-note" id="wstNote">Your event host will tell you where to send it.</p>
+          </div>
+          <p class="from">From your PMO &amp; SMO Day organizing team</p>
+          <button class="flipbtn" type="button" data-flip>See your boarding pass <span>Flip ↻</span></button>
+        </article>
+
+        <article class="face back" id="back" aria-label="Boarding pass">
+          <header class="bp-head"><b>Boarding pass</b><span>PMO → SMO</span></header>
+          <div class="bp-grid">
+            <div class="wide"><p class="label">Passenger</p><p class="v" id="bpName"></p></div>
+            <div><p class="label">Flight</p><p class="v">PMO 1104</p></div>
+            <div><p class="label">Date</p><p class="v">Wed 04 Nov</p></div>
+            <div><p class="label">Boarding</p><p class="v">1:00 PM</p></div>
+            <div><p class="label">Gate</p><p class="v">A2-39</p></div>
+          </div>
+          <div class="perf" aria-hidden="true"></div>
+          <ol class="itin">
+            <li><time>1:00 PM</time><span>Welcome &amp; setup</span></li>
+            <li><time>1:10 PM</time><span>Game 1 <small>· revealed at the gate</small></span></li>
+            <li><time>1:45 PM</time><span>Potluck break</span></li>
+            <li><time>2:00 PM</time><span>Game 2 <small>· revealed at the gate</small></span></li>
+            <li><time>2:40 PM</time><span>Break &amp; chit-chat</span></li>
+            <li><time>2:50 PM</time><span>Game 3 <small>· revealed at the gate</small></span></li>
+            <li><time>3:20 PM</time><span>Closing &amp; acknowledgments</span></li>
+          </ol>
+          <div class="barcode" aria-hidden="true"></div>
+          <button class="flipbtn" type="button" data-flip>Back to my gift <span>Flip ↻</span></button>
+        </article>
+
+      </div>
+    </div>
+    <p class="fine">Screenshot your card. Your superpower and boarding pass go with you all afternoon.</p>
+  </section>
+
+  <!-- Host / projector view: open this page with #host at the end of the link -->
+  <section id="host" hidden aria-label="Welcome screen">
+    <div class="host-copy">
+      <p class="eyebrow">Centennial College · Wednesday, November 4 · Room A2-39</p>
+      <h1 class="host-title">PMO &amp; <em>SMO</em> Day</h1>
+      <p class="big">Every person in this room has a gift waiting. Scan to open yours.</p>
+      <ol class="host-agenda" id="hostAgenda">
+        <li data-min="780"><time>1:00 PM</time><span>Welcome &amp; setup</span></li>
+        <li data-min="790"><time>1:10 PM</time><span>Game 1</span></li>
+        <li data-min="825"><time>1:45 PM</time><span>Potluck break</span></li>
+        <li data-min="840"><time>2:00 PM</time><span>Game 2</span></li>
+        <li data-min="880"><time>2:40 PM</time><span>Break &amp; chit-chat</span></li>
+        <li data-min="890"><time>2:50 PM</time><span>Game 3</span></li>
+        <li data-min="920"><time>3:20 PM</time><span>Closing &amp; acknowledgments</span></li>
+      </ol>
+      <p id="clock"></p>
+    </div>
+    <div class="qr-card">
+      <div class="qr" id="qr"><!--QR--><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 37 37" shape-rendering="crispEdges" role="img" aria-label="QR code to open your welcome gift"><rect width="37" height="37" fill="#FFFFFF"/><g fill="#454546"><rect x="2" y="2" width="1" height="1"/><rect x="3" y="2" width="1" height="1"/><rect x="4" y="2" width="1" height="1"/><rect x="5" y="2" width="1" height="1"/><rect x="6" y="2" width="1" height="1"/><rect x="7" y="2" width="1" height="1"/><rect x="8" y="2" width="1" height="1"/><rect x="10" y="2" width="1" height="1"/><rect x="11" y="2" width="1" height="1"/><rect x="13" y="2" width="1" height="1"/><rect x="14" y="2" width="1" height="1"/><rect x="15" y="2" width="1" height="1"/><rect x="16" y="2" width="1" height="1"/><rect x="18" y="2" width="1" height="1"/><rect x="20" y="2" width="1" height="1"/><rect x="23" y="2" width="1" height="1"/><rect x="25" y="2" width="1" height="1"/><rect x="28" y="2" width="1" height="1"/><rect x="29" y="2" width="1" height="1"/><rect x="30" y="2" width="1" height="1"/><rect x="31" y="2" width="1" height="1"/><rect x="32" y="2" width="1" height="1"/><rect x="33" y="2" width="1" height="1"/><rect x="34" y="2" width="1" height="1"/><rect x="2" y="3" width="1" height="1"/><rect x="8" y="3" width="1" height="1"/><rect x="12" y="3" width="1" height="1"/><rect x="13" y="3" width="1" height="1"/><rect x="15" y="3" width="1" height="1"/><rect x="16" y="3" width="1" height="1"/><rect x="20" y="3" width="1" height="1"/><rect x="21" y="3" width="1" height="1"/><rect x="22" y="3" width="1" height="1"/><rect x="23" y="3" width="1" height="1"/><rect x="26" y="3" width="1" height="1"/><rect x="28" y="3" width="1" height="1"/><rect x="34" y="3" width="1" height="1"/><rect x="2" y="4" width="1" height="1"/><rect x="4" y="4" width="1" height="1"/><rect x="5" y="4" width="1" height="1"/><rect x="6" y="4" width="1" height="1"/><rect x="8" y="4" width="1" height="1"/><rect x="11" y="4" width="1" height="1"/><rect x="12" y="4" width="1" height="1"/><rect x="13" y="4" width="1" height="1"/><rect x="16" y="4" width="1" height="1"/><rect x="19" y="4" width="1" height="1"/><rect x="20" y="4" width="1" height="1"/><rect x="22" y="4" width="1" height="1"/><rect x="23" y="4" width="1" height="1"/><rect x="24" y="4" width="1" height="1"/><rect x="25" y="4" width="1" height="1"/><rect x="26" y="4" width="1" height="1"/><rect x="28" y="4" width="1" height="1"/><rect x="30" y="4" width="1" height="1"/><rect x="31" y="4" width="1" height="1"/><rect x="32" y="4" width="1" height="1"/><rect x="34" y="4" width="1" height="1"/><rect x="2" y="5" width="1" height="1"/><rect x="4" y="5" width="1" height="1"/><rect x="5" y="5" width="1" height="1"/><rect x="6" y="5" width="1" height="1"/><rect x="8" y="5" width="1" height="1"/><rect x="10" y="5" width="1" height="1"/><rect x="11" y="5" width="1" height="1"/><rect x="13" y="5" width="1" height="1"/><rect x="17" y="5" width="1" height="1"/><rect x="18" y="5" width="1" height="1"/><rect x="19" y="5" width="1" height="1"/><rect x="23" y="5" width="1" height="1"/><rect x="25" y="5" width="1" height="1"/><rect x="28" y="5" width="1" height="1"/><rect x="30" y="5" width="1" height="1"/><rect x="31" y="5" width="1" height="1"/><rect x="32" y="5" width="1" height="1"/><rect x="34" y="5" width="1" height="1"/><rect x="2" y="6" width="1" height="1"/><rect x="4" y="6" width="1" height="1"/><rect x="5" y="6" width="1" height="1"/><rect x="6" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/><rect x="11" y="6" width="1" height="1"/><rect x="18" y="6" width="1" height="1"/><rect x="19" y="6" width="1" height="1"/><rect x="21" y="6" width="1" height="1"/><rect x="24" y="6" width="1" height="1"/><rect x="25" y="6" width="1" height="1"/><rect x="28" y="6" width="1" height="1"/><rect x="30" y="6" width="1" height="1"/><rect x="31" y="6" width="1" height="1"/><rect x="32" y="6" width="1" height="1"/><rect x="34" y="6" width="1" height="1"/><rect x="2" y="7" width="1" height="1"/><rect x="8" y="7" width="1" height="1"/><rect x="10" y="7" width="1" height="1"/><rect x="14" y="7" width="1" height="1"/><rect x="15" y="7" width="1" height="1"/><rect x="16" y="7" width="1" height="1"/><rect x="17" y="7" width="1" height="1"/><rect x="20" y="7" width="1" height="1"/><rect x="22" y="7" width="1" height="1"/><rect x="24" y="7" width="1" height="1"/><rect x="26" y="7" width="1" height="1"/><rect x="28" y="7" width="1" height="1"/><rect x="34" y="7" width="1" height="1"/><rect x="2" y="8" width="1" height="1"/><rect x="3" y="8" width="1" height="1"/><rect x="4" y="8" width="1" height="1"/><rect x="5" y="8" width="1" height="1"/><rect x="6" y="8" width="1" height="1"/><rect x="7" y="8" width="1" height="1"/><rect x="8" y="8" width="1" height="1"/><rect x="10" y="8" width="1" height="1"/><rect x="12" y="8" width="1" height="1"/><rect x="14" y="8" width="1" height="1"/><rect x="16" y="8" width="1" height="1"/><rect x="18" y="8" width="1" height="1"/><rect x="20" y="8" width="1" height="1"/><rect x="22" y="8" width="1" height="1"/><rect x="24" y="8" width="1" height="1"/><rect x="26" y="8" width="1" height="1"/><rect x="28" y="8" width="1" height="1"/><rect x="29" y="8" width="1" height="1"/><rect x="30" y="8" width="1" height="1"/><rect x="31" y="8" width="1" height="1"/><rect x="32" y="8" width="1" height="1"/><rect x="33" y="8" width="1" height="1"/><rect x="34" y="8" width="1" height="1"/><rect x="10" y="9" width="1" height="1"/><rect x="12" y="9" width="1" height="1"/><rect x="13" y="9" width="1" height="1"/><rect x="14" y="9" width="1" height="1"/><rect x="19" y="9" width="1" height="1"/><rect x="20" y="9" width="1" height="1"/><rect x="21" y="9" width="1" height="1"/><rect x="22" y="9" width="1" height="1"/><rect x="23" y="9" width="1" height="1"/><rect x="25" y="9" width="1" height="1"/><rect x="2" y="10" width="1" height="1"/><rect x="6" y="10" width="1" height="1"/><rect x="8" y="10" width="1" height="1"/><rect x="9" y="10" width="1" height="1"/><rect x="10" y="10" width="1" height="1"/><rect x="11" y="10" width="1" height="1"/><rect x="14" y="10" width="1" height="1"/><rect x="17" y="10" width="1" height="1"/><rect x="19" y="10" width="1" height="1"/><rect x="23" y="10" width="1" height="1"/><rect x="25" y="10" width="1" height="1"/><rect x="26" y="10" width="1" height="1"/><rect x="27" y="10" width="1" height="1"/><rect x="28" y="10" width="1" height="1"/><rect x="29" y="10" width="1" height="1"/><rect x="30" y="10" width="1" height="1"/><rect x="31" y="10" width="1" height="1"/><rect x="34" y="10" width="1" height="1"/><rect x="2" y="11" width="1" height="1"/><rect x="3" y="11" width="1" height="1"/><rect x="6" y="11" width="1" height="1"/><rect x="7" y="11" width="1" height="1"/><rect x="11" y="11" width="1" height="1"/><rect x="18" y="11" width="1" height="1"/><rect x="19" y="11" width="1" height="1"/><rect x="20" y="11" width="1" height="1"/><rect x="25" y="11" width="1" height="1"/><rect x="27" y="11" width="1" height="1"/><rect x="31" y="11" width="1" height="1"/><rect x="32" y="11" width="1" height="1"/><rect x="33" y="11" width="1" height="1"/><rect x="2" y="12" width="1" height="1"/><rect x="7" y="12" width="1" height="1"/><rect x="8" y="12" width="1" height="1"/><rect x="9" y="12" width="1" height="1"/><rect x="11" y="12" width="1" height="1"/><rect x="14" y="12" width="1" height="1"/><rect x="15" y="12" width="1" height="1"/><rect x="16" y="12" width="1" height="1"/><rect x="17" y="12" width="1" height="1"/><rect x="20" y="12" width="1" height="1"/><rect x="25" y="12" width="1" height="1"/><rect x="26" y="12" width="1" height="1"/><rect x="28" y="12" width="1" height="1"/><rect x="31" y="12" width="1" height="1"/><rect x="33" y="12" width="1" height="1"/><rect x="5" y="13" width="1" height="1"/><rect x="7" y="13" width="1" height="1"/><rect x="9" y="13" width="1" height="1"/><rect x="10" y="13" width="1" height="1"/><rect x="11" y="13" width="1" height="1"/><rect x="12" y="13" width="1" height="1"/><rect x="14" y="13" width="1" height="1"/><rect x="15" y="13" width="1" height="1"/><rect x="17" y="13" width="1" height="1"/><rect x="21" y="13" width="1" height="1"/><rect x="23" y="13" width="1" height="1"/><rect x="25" y="13" width="1" height="1"/><rect x="26" y="13" width="1" height="1"/><rect x="27" y="13" width="1" height="1"/><rect x="34" y="13" width="1" height="1"/><rect x="2" y="14" width="1" height="1"/><rect x="3" y="14" width="1" height="1"/><rect x="6" y="14" width="1" height="1"/><rect x="8" y="14" width="1" height="1"/><rect x="9" y="14" width="1" height="1"/><rect x="12" y="14" width="1" height="1"/><rect x="14" y="14" width="1" height="1"/><rect x="15" y="14" width="1" height="1"/><rect x="18" y="14" width="1" height="1"/><rect x="21" y="14" width="1" height="1"/><rect x="24" y="14" width="1" height="1"/><rect x="26" y="14" width="1" height="1"/><rect x="28" y="14" width="1" height="1"/><rect x="29" y="14" width="1" height="1"/><rect x="30" y="14" width="1" height="1"/><rect x="31" y="14" width="1" height="1"/><rect x="33" y="14" width="1" height="1"/><rect x="2" y="15" width="1" height="1"/><rect x="5" y="15" width="1" height="1"/><rect x="7" y="15" width="1" height="1"/><rect x="10" y="15" width="1" height="1"/><rect x="11" y="15" width="1" height="1"/><rect x="12" y="15" width="1" height="1"/><rect x="14" y="15" width="1" height="1"/><rect x="16" y="15" width="1" height="1"/><rect x="20" y="15" width="1" height="1"/><rect x="21" y="15" width="1" height="1"/><rect x="22" y="15" width="1" height="1"/><rect x="23" y="15" width="1" height="1"/><rect x="24" y="15" width="1" height="1"/><rect x="28" y="15" width="1" height="1"/><rect x="31" y="15" width="1" height="1"/><rect x="32" y="15" width="1" height="1"/><rect x="3" y="16" width="1" height="1"/><rect x="5" y="16" width="1" height="1"/><rect x="8" y="16" width="1" height="1"/><rect x="10" y="16" width="1" height="1"/><rect x="12" y="16" width="1" height="1"/><rect x="13" y="16" width="1" height="1"/><rect x="14" y="16" width="1" height="1"/><rect x="17" y="16" width="1" height="1"/><rect x="20" y="16" width="1" height="1"/><rect x="22" y="16" width="1" height="1"/><rect x="25" y="16" width="1" height="1"/><rect x="27" y="16" width="1" height="1"/><rect x="28" y="16" width="1" height="1"/><rect x="33" y="16" width="1" height="1"/><rect x="5" y="17" width="1" height="1"/><rect x="7" y="17" width="1" height="1"/><rect x="11" y="17" width="1" height="1"/><rect x="13" y="17" width="1" height="1"/><rect x="17" y="17" width="1" height="1"/><rect x="18" y="17" width="1" height="1"/><rect x="19" y="17" width="1" height="1"/><rect x="23" y="17" width="1" height="1"/><rect x="24" y="17" width="1" height="1"/><rect x="26" y="17" width="1" height="1"/><rect x="27" y="17" width="1" height="1"/><rect x="28" y="17" width="1" height="1"/><rect x="30" y="17" width="1" height="1"/><rect x="3" y="18" width="1" height="1"/><rect x="5" y="18" width="1" height="1"/><rect x="6" y="18" width="1" height="1"/><rect x="8" y="18" width="1" height="1"/><rect x="9" y="18" width="1" height="1"/><rect x="11" y="18" width="1" height="1"/><rect x="12" y="18" width="1" height="1"/><rect x="15" y="18" width="1" height="1"/><rect x="19" y="18" width="1" height="1"/><rect x="21" y="18" width="1" height="1"/><rect x="23" y="18" width="1" height="1"/><rect x="24" y="18" width="1" height="1"/><rect x="28" y="18" width="1" height="1"/><rect x="30" y="18" width="1" height="1"/><rect x="32" y="18" width="1" height="1"/><rect x="33" y="18" width="1" height="1"/><rect x="3" y="19" width="1" height="1"/><rect x="4" y="19" width="1" height="1"/><rect x="5" y="19" width="1" height="1"/><rect x="7" y="19" width="1" height="1"/><rect x="9" y="19" width="1" height="1"/><rect x="13" y="19" width="1" height="1"/><rect x="14" y="19" width="1" height="1"/><rect x="15" y="19" width="1" height="1"/><rect x="18" y="19" width="1" height="1"/><rect x="20" y="19" width="1" height="1"/><rect x="25" y="19" width="1" height="1"/><rect x="27" y="19" width="1" height="1"/><rect x="31" y="19" width="1" height="1"/><rect x="32" y="19" width="1" height="1"/><rect x="33" y="19" width="1" height="1"/><rect x="3" y="20" width="1" height="1"/><rect x="6" y="20" width="1" height="1"/><rect x="7" y="20" width="1" height="1"/><rect x="8" y="20" width="1" height="1"/><rect x="9" y="20" width="1" height="1"/><rect x="12" y="20" width="1" height="1"/><rect x="13" y="20" width="1" height="1"/><rect x="14" y="20" width="1" height="1"/><rect x="16" y="20" width="1" height="1"/><rect x="17" y="20" width="1" height="1"/><rect x="19" y="20" width="1" height="1"/><rect x="22" y="20" width="1" height="1"/><rect x="23" y="20" width="1" height="1"/><rect x="25" y="20" width="1" height="1"/><rect x="26" y="20" width="1" height="1"/><rect x="28" y="20" width="1" height="1"/><rect x="29" y="20" width="1" height="1"/><rect x="31" y="20" width="1" height="1"/><rect x="33" y="20" width="1" height="1"/><rect x="3" y="21" width="1" height="1"/><rect x="7" y="21" width="1" height="1"/><rect x="11" y="21" width="1" height="1"/><rect x="12" y="21" width="1" height="1"/><rect x="14" y="21" width="1" height="1"/><rect x="16" y="21" width="1" height="1"/><rect x="19" y="21" width="1" height="1"/><rect x="20" y="21" width="1" height="1"/><rect x="23" y="21" width="1" height="1"/><rect x="25" y="21" width="1" height="1"/><rect x="29" y="21" width="1" height="1"/><rect x="2" y="22" width="1" height="1"/><rect x="4" y="22" width="1" height="1"/><rect x="5" y="22" width="1" height="1"/><rect x="8" y="22" width="1" height="1"/><rect x="10" y="22" width="1" height="1"/><rect x="11" y="22" width="1" height="1"/><rect x="17" y="22" width="1" height="1"/><rect x="20" y="22" width="1" height="1"/><rect x="21" y="22" width="1" height="1"/><rect x="22" y="22" width="1" height="1"/><rect x="23" y="22" width="1" height="1"/><rect x="24" y="22" width="1" height="1"/><rect x="26" y="22" width="1" height="1"/><rect x="28" y="22" width="1" height="1"/><rect x="29" y="22" width="1" height="1"/><rect x="30" y="22" width="1" height="1"/><rect x="31" y="22" width="1" height="1"/><rect x="34" y="22" width="1" height="1"/><rect x="2" y="23" width="1" height="1"/><rect x="4" y="23" width="1" height="1"/><rect x="7" y="23" width="1" height="1"/><rect x="10" y="23" width="1" height="1"/><rect x="13" y="23" width="1" height="1"/><rect x="15" y="23" width="1" height="1"/><rect x="16" y="23" width="1" height="1"/><rect x="18" y="23" width="1" height="1"/><rect x="21" y="23" width="1" height="1"/><rect x="24" y="23" width="1" height="1"/><rect x="25" y="23" width="1" height="1"/><rect x="29" y="23" width="1" height="1"/><rect x="33" y="23" width="1" height="1"/><rect x="4" y="24" width="1" height="1"/><rect x="5" y="24" width="1" height="1"/><rect x="8" y="24" width="1" height="1"/><rect x="10" y="24" width="1" height="1"/><rect x="11" y="24" width="1" height="1"/><rect x="12" y="24" width="1" height="1"/><rect x="13" y="24" width="1" height="1"/><rect x="15" y="24" width="1" height="1"/><rect x="18" y="24" width="1" height="1"/><rect x="19" y="24" width="1" height="1"/><rect x="21" y="24" width="1" height="1"/><rect x="23" y="24" width="1" height="1"/><rect x="24" y="24" width="1" height="1"/><rect x="25" y="24" width="1" height="1"/><rect x="26" y="24" width="1" height="1"/><rect x="30" y="24" width="1" height="1"/><rect x="32" y="24" width="1" height="1"/><rect x="33" y="24" width="1" height="1"/><rect x="7" y="25" width="1" height="1"/><rect x="9" y="25" width="1" height="1"/><rect x="15" y="25" width="1" height="1"/><rect x="16" y="25" width="1" height="1"/><rect x="19" y="25" width="1" height="1"/><rect x="20" y="25" width="1" height="1"/><rect x="21" y="25" width="1" height="1"/><rect x="22" y="25" width="1" height="1"/><rect x="23" y="25" width="1" height="1"/><rect x="25" y="25" width="1" height="1"/><rect x="26" y="25" width="1" height="1"/><rect x="27" y="25" width="1" height="1"/><rect x="28" y="25" width="1" height="1"/><rect x="29" y="25" width="1" height="1"/><rect x="33" y="25" width="1" height="1"/><rect x="2" y="26" width="1" height="1"/><rect x="3" y="26" width="1" height="1"/><rect x="5" y="26" width="1" height="1"/><rect x="7" y="26" width="1" height="1"/><rect x="8" y="26" width="1" height="1"/><rect x="9" y="26" width="1" height="1"/><rect x="11" y="26" width="1" height="1"/><rect x="15" y="26" width="1" height="1"/><rect x="17" y="26" width="1" height="1"/><rect x="19" y="26" width="1" height="1"/><rect x="22" y="26" width="1" height="1"/><rect x="23" y="26" width="1" height="1"/><rect x="24" y="26" width="1" height="1"/><rect x="25" y="26" width="1" height="1"/><rect x="26" y="26" width="1" height="1"/><rect x="27" y="26" width="1" height="1"/><rect x="28" y="26" width="1" height="1"/><rect x="29" y="26" width="1" height="1"/><rect x="30" y="26" width="1" height="1"/><rect x="31" y="26" width="1" height="1"/><rect x="33" y="26" width="1" height="1"/><rect x="34" y="26" width="1" height="1"/><rect x="10" y="27" width="1" height="1"/><rect x="12" y="27" width="1" height="1"/><rect x="15" y="27" width="1" height="1"/><rect x="16" y="27" width="1" height="1"/><rect x="17" y="27" width="1" height="1"/><rect x="19" y="27" width="1" height="1"/><rect x="20" y="27" width="1" height="1"/><rect x="26" y="27" width="1" height="1"/><rect x="30" y="27" width="1" height="1"/><rect x="32" y="27" width="1" height="1"/><rect x="33" y="27" width="1" height="1"/><rect x="2" y="28" width="1" height="1"/><rect x="3" y="28" width="1" height="1"/><rect x="4" y="28" width="1" height="1"/><rect x="5" y="28" width="1" height="1"/><rect x="6" y="28" width="1" height="1"/><rect x="7" y="28" width="1" height="1"/><rect x="8" y="28" width="1" height="1"/><rect x="10" y="28" width="1" height="1"/><rect x="16" y="28" width="1" height="1"/><rect x="17" y="28" width="1" height="1"/><rect x="18" y="28" width="1" height="1"/><rect x="20" y="28" width="1" height="1"/><rect x="22" y="28" width="1" height="1"/><rect x="23" y="28" width="1" height="1"/><rect x="24" y="28" width="1" height="1"/><rect x="26" y="28" width="1" height="1"/><rect x="28" y="28" width="1" height="1"/><rect x="30" y="28" width="1" height="1"/><rect x="31" y="28" width="1" height="1"/><rect x="33" y="28" width="1" height="1"/><rect x="2" y="29" width="1" height="1"/><rect x="8" y="29" width="1" height="1"/><rect x="17" y="29" width="1" height="1"/><rect x="21" y="29" width="1" height="1"/><rect x="22" y="29" width="1" height="1"/><rect x="23" y="29" width="1" height="1"/><rect x="26" y="29" width="1" height="1"/><rect x="30" y="29" width="1" height="1"/><rect x="33" y="29" width="1" height="1"/><rect x="34" y="29" width="1" height="1"/><rect x="2" y="30" width="1" height="1"/><rect x="4" y="30" width="1" height="1"/><rect x="5" y="30" width="1" height="1"/><rect x="6" y="30" width="1" height="1"/><rect x="8" y="30" width="1" height="1"/><rect x="10" y="30" width="1" height="1"/><rect x="11" y="30" width="1" height="1"/><rect x="14" y="30" width="1" height="1"/><rect x="18" y="30" width="1" height="1"/><rect x="22" y="30" width="1" height="1"/><rect x="24" y="30" width="1" height="1"/><rect x="26" y="30" width="1" height="1"/><rect x="27" y="30" width="1" height="1"/><rect x="28" y="30" width="1" height="1"/><rect x="29" y="30" width="1" height="1"/><rect x="30" y="30" width="1" height="1"/><rect x="31" y="30" width="1" height="1"/><rect x="34" y="30" width="1" height="1"/><rect x="2" y="31" width="1" height="1"/><rect x="4" y="31" width="1" height="1"/><rect x="5" y="31" width="1" height="1"/><rect x="6" y="31" width="1" height="1"/><rect x="8" y="31" width="1" height="1"/><rect x="12" y="31" width="1" height="1"/><rect x="13" y="31" width="1" height="1"/><rect x="15" y="31" width="1" height="1"/><rect x="16" y="31" width="1" height="1"/><rect x="20" y="31" width="1" height="1"/><rect x="21" y="31" width="1" height="1"/><rect x="22" y="31" width="1" height="1"/><rect x="23" y="31" width="1" height="1"/><rect x="26" y="31" width="1" height="1"/><rect x="28" y="31" width="1" height="1"/><rect x="29" y="31" width="1" height="1"/><rect x="30" y="31" width="1" height="1"/><rect x="32" y="31" width="1" height="1"/><rect x="2" y="32" width="1" height="1"/><rect x="4" y="32" width="1" height="1"/><rect x="5" y="32" width="1" height="1"/><rect x="6" y="32" width="1" height="1"/><rect x="8" y="32" width="1" height="1"/><rect x="11" y="32" width="1" height="1"/><rect x="14" y="32" width="1" height="1"/><rect x="16" y="32" width="1" height="1"/><rect x="17" y="32" width="1" height="1"/><rect x="23" y="32" width="1" height="1"/><rect x="24" y="32" width="1" height="1"/><rect x="26" y="32" width="1" height="1"/><rect x="28" y="32" width="1" height="1"/><rect x="29" y="32" width="1" height="1"/><rect x="30" y="32" width="1" height="1"/><rect x="2" y="33" width="1" height="1"/><rect x="8" y="33" width="1" height="1"/><rect x="13" y="33" width="1" height="1"/><rect x="14" y="33" width="1" height="1"/><rect x="15" y="33" width="1" height="1"/><rect x="17" y="33" width="1" height="1"/><rect x="18" y="33" width="1" height="1"/><rect x="19" y="33" width="1" height="1"/><rect x="20" y="33" width="1" height="1"/><rect x="22" y="33" width="1" height="1"/><rect x="23" y="33" width="1" height="1"/><rect x="25" y="33" width="1" height="1"/><rect x="26" y="33" width="1" height="1"/><rect x="27" y="33" width="1" height="1"/><rect x="31" y="33" width="1" height="1"/><rect x="2" y="34" width="1" height="1"/><rect x="3" y="34" width="1" height="1"/><rect x="4" y="34" width="1" height="1"/><rect x="5" y="34" width="1" height="1"/><rect x="6" y="34" width="1" height="1"/><rect x="7" y="34" width="1" height="1"/><rect x="8" y="34" width="1" height="1"/><rect x="10" y="34" width="1" height="1"/><rect x="12" y="34" width="1" height="1"/><rect x="13" y="34" width="1" height="1"/><rect x="15" y="34" width="1" height="1"/><rect x="18" y="34" width="1" height="1"/><rect x="19" y="34" width="1" height="1"/><rect x="21" y="34" width="1" height="1"/><rect x="22" y="34" width="1" height="1"/><rect x="23" y="34" width="1" height="1"/><rect x="25" y="34" width="1" height="1"/><rect x="26" y="34" width="1" height="1"/><rect x="27" y="34" width="1" height="1"/><rect x="28" y="34" width="1" height="1"/><rect x="31" y="34" width="1" height="1"/><rect x="34" y="34" width="1" height="1"/></g></svg></div>
+      <b>Point your camera here</b>
+      <span>Then send your secret fact for Who Said That?</span>
+    </div>
+  </section>
+
+
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+(function(){
+  // ----- Content you can edit -----
+  var PERSONAS = [
+    ["The Critical Path Finder","You spot the one task everything else is quietly waiting on."],
+    ["The RAID Log Whisperer","Risks tell you their secrets before they turn into issues."],
+    ["The Scope Guardian","Nothing creeps past you. Especially not scope."],
+    ["The Stakeholder Charmer","You can turn a firm “no” into “let’s discuss on Thursday.”"],
+    ["The Deadline Tamer","Deadlines don’t scare you. They line up politely."],
+    ["The Status Report Poet","You make red, amber and green read like a story people want to finish."],
+    ["The Dependency Detective","You find the link between two projects that nobody else connected."],
+    ["The Calm in the Crisis","When the room panics, you open the plan."],
+    ["The Milestone Maker","You turn big goals into dates people can actually hit."],
+    ["The Strategy Navigator","You keep everyone pointed at the why, not just the what."],
+    ["The Change Champion","People follow you into new ways of working."],
+    ["The Lessons-Learned Sage","You make sure the same mistake never happens twice."],
+    ["The Meeting Rescuer","Your meetings end early. With decisions."],
+    ["The Big-Picture Builder","Others see a task. You see the whole portfolio."]
+  ];
+  // Google Form pre-filled link for Who Said That? In the form's pre-filled link, type NAME in the first-name box.
+  // The page swaps NAME for the guest's first name. Must start with https://
+  var FORM_URL = "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=06RqMe708Eic587y4eKjMakaUx-rEyZPpOQGDalN6C9UN0cwVlpFV0ZMRjUwTkhLSFE0VlM1QThBSi4u";
+  // Address guests open. Leave blank on GitHub Pages (the page uses its own address automatically).
+  var GIFT_URL = "";
+  var GOLDEN_EVERY = 15;   // about 1 in 15 names holds the Golden Gantt. Set to 0 to turn it off.
+  // The superpower comes from the guest's first name, so the Passenger Board can work it out from the
+  // Microsoft Forms list on its own. Keep this function and the PERSONAS order the same in passengers.html.
+  function powerOf(name){
+    var s = String(name).replace(/\s+/g," ").trim().toLowerCase(), h = 5381;
+    for(var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+    h = h >>> 0;
+    return { p: h % PERSONAS.length, golden: GOLDEN_EVERY > 0 && Math.floor(h / 97) % GOLDEN_EVERY === 0 };
+  }
+  var KEY = "pmoSmoGift2026";
+
+  // ----- Helpers -----
+  var $ = function(s){ return document.querySelector(s); };
+  var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function load(){ try{ var v = localStorage.getItem(KEY); return v ? JSON.parse(v) : null; }catch(e){ return null; } }
+  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+  function wipe(){ try{ localStorage.removeItem(KEY); }catch(e){} }
+  function pick(n){ return Math.floor(Math.random()*n); }
+  function buzz(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
+
+  var state = load();
+  var SCENES = ["claim","gift","reveal","host"];
+  function show(id){
+    SCENES.forEach(function(s){ $("#"+s).hidden = (s !== id); });
+    try{ window.scrollTo(0,0); }catch(e){}
+  }
+
+  // ----- Confetti -----
+  var cv = $("#confetti"), cx = cv.getContext("2d"), parts = [], raf = 0;
+  var COLORS = ["#D4DF38","#FFFFFF","#E9EF9B","#DFE76A","#A3A3A5"];
+  function size(){ var d = window.devicePixelRatio || 1; cv.width = innerWidth*d; cv.height = innerHeight*d; cx.setTransform(d,0,0,d,0,0); }
+  addEventListener("resize", size); size();
+  function burst(n){
+    if(reduce) n = Math.round(n/5);
+    var x = innerWidth/2, y = innerHeight*0.45;
+    for(var i=0;i<n;i++){
+      var a = Math.random()*Math.PI*2, s = 4 + Math.random()*10;
+      parts.push({x:x,y:y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-7,w:6+Math.random()*6,h:9+Math.random()*10,r:Math.random()*6,vr:(Math.random()-.5)*.35,c:COLORS[i%COLORS.length],t:0});
+    }
+    if(!raf) raf = requestAnimationFrame(tick);
+  }
+  function tick(){
+    cx.clearRect(0,0,innerWidth,innerHeight);
+    parts = parts.filter(function(p){ return p.y < innerHeight+40 && p.t < 280; });
+    parts.forEach(function(p){
+      p.t++; p.vy += .24; p.vx *= .985; p.vy *= .985; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      cx.save(); cx.translate(p.x,p.y); cx.rotate(p.r); cx.fillStyle = p.c;
+      cx.fillRect(-p.w/2,-p.h/2,p.w,Math.abs(Math.cos(p.t*.12))*p.h+1); cx.restore();
+    });
+    raf = parts.length ? requestAnimationFrame(tick) : 0;
+  }
+
+  // ----- 1. Claim -----
+  $("#claimForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    var n = $("#nameInput").value.replace(/\s+/g," ").trim().slice(0,24);
+    if(!n){ $("#err").textContent = "Type your first name to find your gift."; $("#nameInput").focus(); return; }
+    $("#err").textContent = "";
+    var pw = powerOf(n);
+    state = { name:n, p:pw.p, golden:pw.golden, opened:false, done:false };
+    save(); prepGift(); show("gift");
+  });
+
+  // ----- 2. Gift -----
+  var taps = 0;
+  function dots(){ document.querySelectorAll(".dots i").forEach(function(d,i){ d.classList.toggle("on", i < taps); }); }
+  function prepGift(){
+    taps = 0; dots();
+    $("#giftFor").textContent = state.name; $("#tagName").textContent = state.name;
+    $("#box").classList.remove("open","wiggle");
+    $("#hint").textContent = "Tap the gift 3 times to open it";
+  }
+  $("#box").addEventListener("click", function(){
+    if(taps >= 3) return;
+    taps++; dots(); buzz(15 + taps*20);
+    var b = $("#box");
+    if(taps < 3){
+      b.style.setProperty("--amp", (taps*5) + "deg");
+      b.classList.remove("wiggle"); void b.offsetWidth; b.classList.add("wiggle");
+      $("#hint").textContent = taps === 1 ? "Something moved in there." : "One more tap.";
+    } else {
+      b.classList.remove("wiggle"); b.classList.add("open");
+      $("#hint").textContent = "Here it comes!";
+      burst(state.golden ? 260 : 180);
+      state.opened = true; save();
+      setTimeout(function(){
+        fill(); show("reveal");
+        if(!reduce) $("#flip").classList.add("enter");
+        if(state.golden) setTimeout(function(){ burst(160); buzz([60,40,60]); }, 600);
+      }, reduce ? 200 : 950);
+    }
+  });
+  $("#restart").addEventListener("click", function(){ wipe(); state = null; $("#nameInput").value = ""; show("claim"); });
+
+  // ----- 3. Reveal -----
+  function fill(){
+    var p = PERSONAS[state.p] || PERSONAS[0];
+    $("#cName").textContent = state.name; $("#bpName").textContent = state.name;
+    $("#pTitle").textContent = p[0]; $("#pDesc").textContent = p[1];
+    $("#golden").hidden = !state.golden;
+    setFact();
+    setFlip(false);
+  }
+  function setFact(){
+    if(!/^https:\/\//.test(FORM_URL)) return;
+    var url = /=NAME(?=&|#|$)/.test(FORM_URL) ? FORM_URL.replace(/=NAME(?=&|#|$)/, "=" + encodeURIComponent(state.name)) : FORM_URL;
+    $("#wstLink").href = url; $("#wstLink").hidden = false;
+    $("#wstNote").textContent = state.sent ? "Sent? You\u2019re on the passenger list. Changed your mind? Tap again and send a new one." : "Opens a one-question form. Nobody in the room learns it\u2019s yours until the reveal.";
+  }
+  $("#wstLink").addEventListener("click", function(){ state.sent = true; save(); setTimeout(setFact, 400); });
+  function setFlip(on){
+    $("#flip").classList.toggle("flipped", on);
+    $("#front").inert = on; $("#back").inert = !on;
+    $("#front").setAttribute("aria-hidden", on ? "true" : "false");
+    $("#back").setAttribute("aria-hidden", on ? "false" : "true");
+  }
+  document.querySelectorAll("[data-flip]").forEach(function(btn){
+    btn.addEventListener("click", function(){ setFlip(!$("#flip").classList.contains("flipped")); });
+  });
+
+  // ----- Host view -----
+  var clockTimer = 0;
+  function startClock(){
+    function upd(){
+      var now = new Date();
+      $("#clock").textContent = now.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
+      var isDay = now.getFullYear() === 2026 && now.getMonth() === 10 && now.getDate() === 4;
+      var mins = now.getHours()*60 + now.getMinutes();
+      var rows = Array.prototype.slice.call(document.querySelectorAll("#hostAgenda li"));
+      var cur = 0;
+      if(isDay) rows.forEach(function(li,i){ if(mins >= +li.dataset.min) cur = i; });
+      rows.forEach(function(li,i){ li.classList.toggle("now", i === cur); });
+    }
+    upd(); if(!clockTimer) clockTimer = setInterval(upd, 15000);
+    drawQR();
+  }
+  // Rebuild the projector QR for wherever this page is hosted; keeps the built-in QR if anything is missing.
+  function drawQR(){
+    var url = GIFT_URL || (/github\.io$/i.test(location.hostname) ? location.origin + location.pathname : "");
+    if(!url || typeof window.qrcode !== "function") return;
+    try{
+      var q = window.qrcode(0, "M"); q.addData(url); q.make();
+      var n = q.getModuleCount(), m = 2, size = n + m*2, rects = "";
+      for(var r = 0; r < n; r++) for(var c = 0; c < n; c++) if(q.isDark(r, c)) rects += '<rect x="' + (c+m) + '" y="' + (r+m) + '" width="1" height="1"/>';
+      $("#qr").innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + size + ' ' + size + '" shape-rendering="crispEdges" role="img" aria-label="QR code to open your welcome gift"><rect width="' + size + '" height="' + size + '" fill="#FFFFFF"/><g fill="#454546">' + rects + '</g></svg>';
+    }catch(e){}
+  }
+
+  // ----- Routing -----
+  function route(){
+    if(location.hash === "#host"){ show("host"); startClock(); return; }
+    if(state && state.opened){ fill(); show("reveal"); return; }
+    if(state){ prepGift(); show("gift"); return; }
+    show("claim");
+  }
+  addEventListener("hashchange", route);
+  route();
+})();
+</script>
+</body>
+</html>
