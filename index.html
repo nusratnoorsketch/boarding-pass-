@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 </head>
 <body>
-<title>PMO & SMO Welcome Gift</title>
+<title>PMO & SMP Welcome Gift</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;800;900&display=swap">
@@ -174,7 +174,7 @@ p,h1,h2,h3,ol{margin:0}
 
   <!-- 1. Claim -->
   <section id="claim" class="scene" aria-labelledby="claimTitle">
-    <p class="eyebrow">Centennial College · PMO &amp; SMO Day</p>
+    <p class="eyebrow">Centennial College · PMO &amp; SMP Day</p>
     <h1 id="claimTitle">There's a gift here with <em>your name</em> on it.</h1>
     <div class="chips" aria-label="Event details">
       <span>Wed, Nov 4</span><span>1:00 – 3:30 PM</span><span>Room A2-39</span>
@@ -210,7 +210,7 @@ p,h1,h2,h3,ol{margin:0}
 
         <article class="face front" id="front">
           <header class="card-head">
-            <span class="eyebrow">PMO &amp; SMO Day 2026</span>
+            <span class="eyebrow">PMO &amp; SMP Day 2026</span>
             <h2>Welcome, <span id="cName"></span></h2>
           </header>
           <div class="golden" id="golden" hidden>
@@ -222,12 +222,12 @@ p,h1,h2,h3,ol{margin:0}
             <p class="power" id="pTitle"></p>
             <p class="desc" id="pDesc"></p>
           </div>
-          <p class="from">From your PMO &amp; SMO Day organizing team</p>
+          <p class="from">From your PMO &amp; SMP Day organizing team</p>
           <button class="flipbtn" type="button" data-flip>See your boarding pass <span>Flip ↻</span></button>
         </article>
 
         <article class="face back" id="back" aria-label="Boarding pass">
-          <header class="bp-head"><b>Boarding pass</b><span>PMO → SMO</span></header>
+          <header class="bp-head"><b>Boarding pass</b><span>PMO → SMP</span></header>
           <div class="bp-grid">
             <div class="wide"><p class="label">Passenger</p><p class="v" id="bpName"></p></div>
             <div><p class="label">Flight</p><p class="v">PMO 1104</p></div>
@@ -258,7 +258,7 @@ p,h1,h2,h3,ol{margin:0}
   <section id="host" hidden aria-label="Welcome screen">
     <div class="host-copy">
       <p class="eyebrow">Centennial College · Wednesday, November 4 · Room A2-39</p>
-      <h1 class="host-title">PMO &amp; <em>SMO</em> Day</h1>
+      <h1 class="host-title">PMO &amp; <em>SMP</em> Day</h1>
       <p class="big">Every person in this room has a gift waiting. Scan to open yours.</p>
       <ol class="host-agenda" id="hostAgenda">
         <li data-min="780"><time>1:00 PM</time><span>Welcome &amp; kickoff</span></li>
@@ -312,7 +312,7 @@ p,h1,h2,h3,ol{margin:0}
     h = h >>> 0;
     return { p: h % PERSONAS.length, golden: GOLDEN_EVERY > 0 && Math.floor(h / 97) % GOLDEN_EVERY === 0 };
   }
-  var KEY = "pmoSmoGift2026";
+  var KEY = "pmoSMPGift2026";
 
   // ----- Helpers -----
   var $ = function(s){ return document.querySelector(s); };
